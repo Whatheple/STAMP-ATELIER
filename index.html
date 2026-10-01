@@ -46,10 +46,10 @@ aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;d
 .col+.col{border-left:1px solid var(--line)}
 .section{padding:10px 14px;border-bottom:1px solid var(--line)}
 .section h3{
-  margin:0 0 6px;color:var(--h3);font-size:11px;
+  margin:0 0 4px;color:var(--h3);font-size:11px;
   letter-spacing:.1em;text-transform:uppercase
 }
-.field{margin:6px 0;display:grid;grid-template-columns:104px 1fr;gap:8px;align-items:center}
+.field{margin:5px 0;display:grid;grid-template-columns:104px 1fr;gap:8px;align-items:center}
 .field>label{display:flex;justify-content:space-between;align-items:center;margin:0;color:var(--label);white-space:nowrap}
 .field>label span{color:var(--accent);font-size:12px}
 .field>label.chk{justify-content:flex-start;gap:6px;color:var(--chk)}
@@ -62,6 +62,7 @@ aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;d
 .btns button{flex:1;padding:7px 4px;white-space:nowrap}
 button:disabled{opacity:.4;cursor:default}
 button:disabled:hover{background:var(--btn)}
+.pair>label{display:flex;align-items:center;gap:3px;color:var(--chk);white-space:nowrap}
 input[type=range]{width:100%}
 input[type=text],select,input[type=number]{
   width:100%;background:var(--input);border:1px solid var(--input-line);color:var(--text);
@@ -115,6 +116,7 @@ canvas{
     <span class="muted">px</span>
   </div>
   <button id="themeBtn" title="라이트/다크 전환">🌙 다크</button>
+  <button id="settingsResetBtn" title="모든 설정을 기본값으로 되돌리고 저장된 설정도 지웁니다">설정 초기화</button>
   <button id="resetBtn">새로 만들기</button>
   <button id="saveBtn" class="primary">PNG 저장</button>
 </header>
@@ -148,16 +150,16 @@ canvas{
       <input id="brightness" type="range" min="50" max="150" value="100">
     </div>
     <div class="field">
-      <label>흑백 <span id="grayVal">0%</span></label>
-      <input id="gray" type="range" min="0" max="100" value="0">
-    </div>
-    <div class="field">
       <label>가로 이동 <span id="imgXVal">0%</span></label>
       <input id="imgX" type="range" min="-50" max="50" step="0.5" value="0">
     </div>
     <div class="field">
       <label>세로 이동 <span id="imgYVal">0%</span></label>
       <input id="imgY" type="range" min="-50" max="50" step="0.5" value="0">
+    </div>
+    <div class="field">
+      <label for="limitMove">이동 제한</label>
+      <label class="chk" title="이미지는 자유롭게 움직이되, 액자 틀 밖으로 나간 부분은 보이지 않게 숨김"><input id="limitMove" type="checkbox"> 액자 안에서만</label>
     </div>
     <div class="btns"><button id="undoBtn" disabled>↶ 되돌리기</button><button id="centerBtn">중앙으로</button><button id="adjResetBtn">초기화</button></div>
   </div>
@@ -175,8 +177,10 @@ canvas{
           <option value="mono">모노스페이스</option>
           <option value="script">필기체</option>
           <option value="heavy">굵은 고딕</option>
+          <option value="__load">＋ 폰트 불러오기…</option>
         </select>
         <input id="captionColor" type="color" value="#1e1c18" title="글자 색">
+        <input id="fontFile" class="hidden" type="file" accept=".ttf,.otf,.woff,.woff2">
       </div>
     </div>
     <div class="field">
@@ -237,6 +241,54 @@ canvas{
   </div>
 
   <div class="section">
+    <h3>이미지 모서리</h3>
+    <div class="field">
+      <label>모양</label>
+      <select id="cornerStyle">
+        <option value="round">둥글게</option>
+        <option value="cut">사선 컷</option>
+        <option value="notch">안쪽 둥글게</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>크기 <span id="cornerSizeVal">0 px</span></label>
+      <input id="cornerSize" type="range" min="0" max="200" value="0">
+    </div>
+    <div class="field">
+      <label>적용 모서리</label>
+      <div class="pair">
+        <label><input id="cnTL" type="checkbox" checked>↖</label>
+        <label><input id="cnTR" type="checkbox" checked>↗</label>
+        <label><input id="cnBL" type="checkbox" checked>↙</label>
+        <label><input id="cnBR" type="checkbox" checked>↘</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>이미지 필터</h3>
+    <div class="field">
+      <label>필터</label>
+      <select id="filterType">
+        <option value="none">없음</option>
+        <option value="gray">흑백</option>
+        <option value="sepia">세피아</option>
+        <option value="vintage">빈티지</option>
+        <option value="vivid">선명하게</option>
+        <option value="fade">페이드</option>
+        <option value="noir">흑백 대비</option>
+        <option value="blur">블러</option>
+        <option value="invert">반전</option>
+        <option value="hue">색조 변경</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>강도 <span id="filterAmtVal">100%</span></label>
+      <input id="filterAmt" type="range" min="0" max="100" value="100">
+    </div>
+  </div>
+
+  <div class="section">
     <h3>종이 질감</h3>
     <div class="field">
       <label>질감 종류</label>
@@ -289,10 +341,7 @@ canvas{
     </div>
   </div>
 
-  <div class="section">
-    <span class="badge">자동 맞춤 ON</span>
-    <div class="hint">불러온 이미지의 가로세로 비율을 그대로 사용합니다. 잘리지 않도록 우표 캔버스가 자동으로 맞춰집니다.</div>
-  </div>
+
 </div>
 </aside>
 
@@ -307,7 +356,7 @@ const canvas = $("canvas"), ctx = canvas.getContext("2d");
 
 let img = null;
 let offsetX = 0, offsetY = 0;
-let scale = 1, rotation = 0, brightness = 1, gray = 0;
+let scale = 1, rotation = 0, brightness = 1;
 
 function setText(id, value){ $(id).textContent = value; }
 
@@ -440,6 +489,53 @@ function drawEdgeStyle(style, w, h, pk){
   ctx.restore();
 }
 
+// 이미지 모서리(라운딩/컷/안쪽 둥글게) 경로. 액자 외곽선도 같은 경로를 써서 모양이 맞춰짐.
+function getShape(){
+  return {style:$("cornerStyle").value,size:+$("cornerSize").value,
+          cn:[$("cnTL").checked,$("cnTR").checked,$("cnBR").checked,$("cnBL").checked]};
+}
+function framePath(c,x,y,W,H,sh){
+  c.beginPath();
+  const r=Math.max(0,Math.min(sh.size,W/2,H/2));
+  if(r<=0||!sh.cn.some(Boolean)){ c.rect(x,y,W,H); return; }
+  const P=[[x,y],[x+W,y],[x+W,y+H],[x,y+H]];            // 좌상, 우상, 우하, 좌하
+  const D=[[1,0],[0,1],[-1,0],[0,-1]];                    // 변 i의 진행 방향 (꼭짓점 i → i+1)
+  c.moveTo(x+W/2,y);
+  for(const i of [1,2,3,0]){
+    const [px,py]=P[i], din=D[(i+3)%4], dout=D[i], ri=sh.cn[i]?r:0;
+    if(!ri){ c.lineTo(px,py); continue; }
+    const ax=px-din[0]*ri, ay=py-din[1]*ri, bx=px+dout[0]*ri, by=py+dout[1]*ri;
+    c.lineTo(ax,ay);
+    if(sh.style==="cut") c.lineTo(bx,by);
+    else if(sh.style==="notch") c.arc(px,py,ri,Math.atan2(-din[1],-din[0]),Math.atan2(dout[1],dout[0]),true);
+    else c.arcTo(px,py,bx,by,ri);
+  }
+  c.closePath();
+}
+// 바깥쪽 옅은 선(안쪽 선보다 inset만큼 큼)에 쓸 모서리 크기 보정
+function outerShape(sh,inset){
+  const k=sh.style==="round"?1:sh.style==="cut"?.586:0;
+  return {...sh,size:sh.size+inset*k};
+}
+// 블러 반경(px). 가장자리가 투명하게 번지지 않도록 그릴 때 이미지를 이만큼 키워서 번진 가장자리를 틀 밖으로 보냄
+function blurPx(w,h){ return $("filterType").value==="blur" ? 8*(+$("filterAmt").value/100)*Math.max(w,h)/800 : 0; }
+// 이미지 필터 프리셋 (강도 0~100%)
+function filterStr(w,h){
+  const t=$("filterType").value, k=+$("filterAmt").value/100, u=Math.max(w,h)/800;
+  switch(t){
+    case "gray":    return `grayscale(${k})`;
+    case "sepia":   return `sepia(${k})`;
+    case "vintage": return `sepia(${.55*k}) contrast(${1+.12*k}) saturate(${1-.2*k}) brightness(${1-.04*k})`;
+    case "vivid":   return `saturate(${1+k}) contrast(${1+.2*k})`;
+    case "fade":    return `contrast(${1-.3*k}) brightness(${1+.12*k}) saturate(${1-.25*k})`;
+    case "noir":    return `grayscale(${k}) contrast(${1+.5*k}) brightness(${1-.1*k})`;
+    case "blur":    return `blur(${blurPx(w,h).toFixed(2)}px)`;
+    case "invert":  return `invert(${k})`;
+    case "hue":     return `hue-rotate(${180*k}deg)`;
+    default:        return "";
+  }
+}
+
 let texImg=null;
 
 // 불러온 텍스처 이미지를 우표의 불투명한 부분에만 합성 (구멍/둥근 모서리 바깥은 투명 유지)
@@ -533,11 +629,13 @@ function roundedImageArea(x,y,w,h,r){
 function draw(){
   const w=canvas.width,h=canvas.height;
   syncPos(w,h);
+  scheduleSave();
   const paper=$("paperColor").value;
   const border=$("borderColor").value;
   const margin=+$("margin").value;
   const style=$("borderStyle").value;
   const texture=+$("texture").value;
+  const shape=getShape();
 
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle=paper;
@@ -555,12 +653,15 @@ function draw(){
     const fit=Math.max(innerW/iw, innerH/ih); // 항상 영역을 꽉 채우되, 이미지가 자동 비율 유지
     const s=fit*scale;
 
+    const fixedFrame=$("limitMove").checked;
     ctx.save();
+    if(fixedFrame){ framePath(ctx,w/2-innerW/2,h/2-innerH/2,innerW,innerH,shape); ctx.clip(); }
     ctx.translate(w/2+offsetX,h/2+offsetY);
     ctx.rotate(rotation*Math.PI/180);
-    ctx.filter=`brightness(${brightness}) grayscale(${gray})`;
-    ctx.beginPath(); ctx.rect(-innerW/2,-innerH/2,innerW,innerH); ctx.clip();
-    ctx.drawImage(img,-iw*s/2,-ih*s/2,iw*s,ih*s);
+    ctx.filter=`brightness(${brightness}) ${filterStr(w,h)}`;
+    if(!fixedFrame){ framePath(ctx,-innerW/2,-innerH/2,innerW,innerH,shape); ctx.clip(); }
+    const s2=s*(1+3*blurPx(w,h)/Math.max(1,Math.min(iw*s,ih*s)));
+    ctx.drawImage(img,-iw*s2/2,-ih*s2/2,iw*s2,ih*s2);
     ctx.restore();
     ctx.filter="none";
 
@@ -569,7 +670,7 @@ function draw(){
       ctx.save();
       ctx.strokeStyle="rgba(0,0,0,.14)";
       ctx.lineWidth=1;
-      ctx.strokeRect(margin+.5,margin+.5,innerW-1,innerH-1);
+      framePath(ctx,margin+.5,margin+.5,innerW-1,innerH-1,shape); ctx.stroke();
       ctx.restore();
     }
   }
@@ -584,7 +685,7 @@ function draw(){
       ctx.save();
       ctx.strokeStyle = "rgba(0,0,0,.08)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(margin-inset+.5,margin-inset+.5,w-2*(margin-inset)-1,h-2*(margin-inset)-1);
+      framePath(ctx,margin-inset+.5,margin-inset+.5,w-2*(margin-inset)-1,h-2*(margin-inset)-1,outerShape(shape,inset)); ctx.stroke();
       ctx.restore();
     }
   } else if(style==="round"){
@@ -640,18 +741,45 @@ $("perf").oninput=e=>{setText("perfVal",`${e.target.value}%`);draw()};
 $("scale").oninput=e=>{scale=+e.target.value/100;setText("scaleVal",`${e.target.value}%`);draw()};
 $("rotation").oninput=e=>{rotation=+e.target.value;setText("rotationVal",`${e.target.value}°`);draw()};
 $("brightness").oninput=e=>{brightness=+e.target.value/100;setText("brightnessVal",`${e.target.value}%`);draw()};
-$("gray").oninput=e=>{gray=+e.target.value/100;setText("grayVal",`${e.target.value}%`);draw()};
 $("captionX").oninput=e=>{setText("captionXVal",`${e.target.value}%`);draw()};
 $("captionY").oninput=e=>{setText("captionYVal",`${e.target.value}%`);draw()};
 $("captionOutline").oninput=e=>{setText("captionOutlineVal",`${e.target.value} px`);draw()};
+// ---- 폰트 불러오기: 글꼴 목록 맨 아래 "＋ 폰트 불러오기…" 선택 → 파일(ttf/otf/woff/woff2) 선택 → 목록에 추가되고 바로 적용 ----
+let userFontN=0, prevFont=$("captionFont").value;
+$("captionFont").addEventListener("change",e=>{
+  if(e.target.value==="__load"){ e.target.value=prevFont; draw(); $("fontFile").click(); }
+  else prevFont=e.target.value;
+});
+$("fontFile").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value="";
+  if(!f) return;
+  try{
+    const n=++userFontN, fam=`UserFont${n}`;
+    const face=new FontFace(fam,await f.arrayBuffer(),{weight:"100 900"});
+    await face.load();
+    document.fonts.add(face);
+    CAPTION_FONTS["user"+n]=`"${fam}", sans-serif`;
+    const o=document.createElement("option");
+    o.value="user"+n; o.textContent=f.name.replace(/\.[^.]+$/,"");
+    const sel=$("captionFont");
+    sel.insertBefore(o,sel.querySelector('option[value="__load"]'));
+    sel.value=prevFont="user"+n;
+    draw();
+  }catch(err){ alert("폰트를 불러오지 못했어요: "+f.name); }
+};
+$("cornerSize").oninput=e=>{setText("cornerSizeVal",`${e.target.value} px`);draw()};
+$("filterAmt").oninput=e=>{setText("filterAmtVal",`${e.target.value}%`);draw()};
 $("fontSize").oninput=e=>{setText("fontVal",`${e.target.value} px`);draw()};
 $("texture").oninput=e=>{setText("textureVal",`${e.target.value}%`);draw()};
-["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor"].forEach(id=>$(id).addEventListener("input",draw));
+["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor","limitMove","filterType","cornerStyle","cnTL","cnTR","cnBL","cnBR"].forEach(id=>$(id).addEventListener("input",draw));
 
+function setTheme(m){
+  document.documentElement.dataset.theme=m;
+  $("themeBtn").textContent=m==="light"?"☀ 라이트":"🌙 다크";
+}
 $("themeBtn").onclick=()=>{
-  const root=document.documentElement, light=root.dataset.theme!=="light";
-  root.dataset.theme=light?"light":"dark";
-  $("themeBtn").textContent=light?"☀ 라이트":"🌙 다크";
+  setTheme(document.documentElement.dataset.theme==="light"?"dark":"light");
+  scheduleSave();
 };
 
 $("textureStyle").addEventListener("input",()=>$("texCustom").classList.toggle("hidden",$("textureStyle").value!=="custom"));
@@ -680,8 +808,8 @@ $("imgX").oninput=e=>{offsetX=+e.target.value/100*canvas.width;draw()};
 $("imgY").oninput=e=>{offsetY=+e.target.value/100*canvas.height;draw()};
 
 // ---- 이미지 조정 되돌리기 / 초기화 ----
-let hist=[], committed={scale:1,rotation:0,brightness:1,gray:0,offsetX:0,offsetY:0};
-const adjKeys=()=>({scale,rotation,brightness,gray,offsetX,offsetY});
+let hist=[], committed={scale:1,rotation:0,brightness:1,offsetX:0,offsetY:0};
+const adjKeys=()=>({scale,rotation,brightness,offsetX,offsetY});
 function updateUndo(){ $("undoBtn").disabled=!hist.length; }
 function commit(){
   const cur=adjKeys();
@@ -690,23 +818,22 @@ function commit(){
   committed=cur; updateUndo();
 }
 function applyAdj(a){
-  ({scale,rotation,brightness,gray,offsetX,offsetY}=a);
+  ({scale,rotation,brightness,offsetX,offsetY}=a);
   $("scale").value=Math.round(scale*100); setText("scaleVal",`${Math.round(scale*100)}%`);
   $("rotation").value=rotation; setText("rotationVal",`${rotation}°`);
   $("brightness").value=Math.round(brightness*100); setText("brightnessVal",`${Math.round(brightness*100)}%`);
-  $("gray").value=Math.round(gray*100); setText("grayVal",`${Math.round(gray*100)}%`);
   draw();
 }
-["scale","rotation","brightness","gray","imgX","imgY"].forEach(id=>$(id).addEventListener("change",commit));
+["scale","rotation","brightness","imgX","imgY"].forEach(id=>$(id).addEventListener("change",commit));
 $("undoBtn").onclick=()=>{ if(!hist.length) return; const a=hist.pop(); committed=a; applyAdj(a); updateUndo(); };
-$("adjResetBtn").onclick=()=>{ applyAdj({scale:1,rotation:0,brightness:1,gray:0,offsetX:0,offsetY:0}); commit(); };
+$("adjResetBtn").onclick=()=>{ applyAdj({scale:1,rotation:0,brightness:1,offsetX:0,offsetY:0}); commit(); };
 $("centerBtn").onclick=()=>{offsetX=0;offsetY=0;draw();commit()};
 
 $("resetBtn").onclick=()=>{
-  img=null;offsetX=offsetY=0;scale=1;rotation=0;brightness=1;gray=0;
+  img=null;offsetX=offsetY=0;scale=1;rotation=0;brightness=1;
   $("file").value="";$("fileName").textContent="";$("caption").value="";
   canvas.width=800;canvas.height=533;syncOut();hist=[];committed=adjKeys();updateUndo();
-  $("scale").value=100;$("rotation").value=0;$("brightness").value=100;$("gray").value=0;
+  $("scale").value=100;$("rotation").value=0;$("brightness").value=100;
   draw();
 };
 
@@ -749,6 +876,60 @@ canvas.addEventListener("pointermove",e=>{
 });
 canvas.addEventListener("pointerup",()=>{drag=null;commit()});
 canvas.addEventListener("pointercancel",()=>{drag=null;commit()});
+
+// ---- 설정 저장(localStorage) / 설정 초기화 ----
+// 이미지·불러온 폰트/텍스처 파일은 저장하지 않고, 이미지에 종속된 값(확대·회전·이동)도 저장하지 않음.
+const SETTINGS_KEY="stampAtelier.settings.v1";
+const SKIP_IDS=new Set(["scale","rotation","imgX","imgY"]);
+const settingEls=()=>[...document.querySelectorAll("aside input, aside select")]
+  .filter(el=>el.id && el.type!=="file" && !SKIP_IDS.has(el.id));
+function collectSettings(){
+  const o={theme:document.documentElement.dataset.theme==="light"?"light":"dark"};
+  for(const el of settingEls()) o[el.id]=el.type==="checkbox"?el.checked:el.value;
+  return o;
+}
+// HTML에 적힌 기본값 (브라우저의 폼 값 복원과 무관하게 항상 같은 값)
+function defaultSettings(){
+  const o={theme:"dark"};
+  for(const el of settingEls()){
+    if(el.type==="checkbox") o[el.id]=el.defaultChecked;
+    else if(el.tagName==="SELECT") o[el.id]=([...el.options].find(op=>op.defaultSelected)||el.options[0]).value;
+    else o[el.id]=el.defaultValue;
+  }
+  return o;
+}
+function applySettings(o){
+  for(const el of settingEls()){
+    if(!(el.id in o)) continue;
+    if(el.type==="checkbox") el.checked=!!o[el.id];
+    else if(el.tagName==="SELECT"){
+      if(![...el.options].some(op=>op.value===String(o[el.id]))) continue; // 불러온 폰트처럼 지금 없는 항목은 건너뜀
+      el.value=o[el.id];
+    } else el.value=o[el.id];
+    el.dispatchEvent(new Event("input",{bubbles:true})); // 라벨·내부 값·표시/숨김을 기존 핸들러로 갱신
+  }
+  setTheme(o.theme==="light"?"light":"dark");
+  prevFont=$("captionFont").value;
+}
+let settingsReady=false, saveTimer=0;
+function scheduleSave(){
+  if(!settingsReady) return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{ try{ localStorage.setItem(SETTINGS_KEY,JSON.stringify(collectSettings())); }catch(e){} },300);
+}
+$("settingsResetBtn").onclick=()=>{
+  if(!confirm("모든 설정을 기본값으로 되돌릴까요?\n(불러온 이미지는 그대로 유지돼요)")) return;
+  applySettings(defaultSettings());
+  applyAdj({scale:1,rotation:0,brightness:1,offsetX:0,offsetY:0});
+  hist=[]; committed=adjKeys(); updateUndo(); syncOut();
+  try{ localStorage.removeItem(SETTINGS_KEY); }catch(e){}
+};
+// 브라우저의 폼 값 복원이 끝난 뒤에 저장된 설정을 적용
+window.addEventListener("load",()=>{
+  try{ const saved=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); if(saved) applySettings(saved); }catch(e){}
+  settingsReady=true;
+  draw();
+});
 
 draw();
 </script>
