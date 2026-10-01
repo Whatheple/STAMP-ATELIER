@@ -62,6 +62,16 @@ aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;d
 .btns button{flex:1;padding:7px 4px;white-space:nowrap}
 button:disabled{opacity:.4;cursor:default}
 button:disabled:hover{background:var(--btn)}
+.modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px}
+.modal.open{display:flex}
+.dialog{width:min(580px,100%);max-height:min(680px,calc(100vh - 32px));display:flex;flex-direction:column;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 65px var(--shadow)}
+.dialog h2{margin:0;padding:16px 20px 6px;font-size:17px}
+.dialog .body{padding:2px 20px 10px;overflow:auto;font-size:13px;line-height:1.65;word-break:keep-all}
+.dialog .body h4{margin:14px 0 4px;font-size:13px;color:var(--accent)}
+.dialog .body ul{margin:0;padding-left:18px}
+.dialog .body li{margin:2px 0}
+.dialog .foot{padding:10px 20px 14px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dialog .made{color:var(--muted);font-size:12px}
 .pair>label{display:flex;align-items:center;gap:3px;color:var(--chk);white-space:nowrap}
 input[type=range]{width:100%}
 input[type=text],select,input[type=number]{
@@ -115,8 +125,9 @@ canvas{
     <input id="outH" type="number" min="1" max="8000" value="533">
     <span class="muted">px</span>
   </div>
+  <button id="guideBtn" title="사용 안내 보기">사용 안내</button>
   <button id="themeBtn" title="라이트/다크 전환">🌙 다크</button>
-  <button id="settingsResetBtn" title="모든 설정을 기본값으로 되돌리고 저장된 설정도 지웁니다">설정 초기화</button>
+  <button id="settingsResetBtn" title="모든 설정을 기본값으로 되돌리고, 저장된 설정과 불러온 폰트·텍스처 파일도 지웁니다">설정 초기화</button>
   <button id="resetBtn">새로 만들기</button>
   <button id="saveBtn" class="primary">PNG 저장</button>
 </header>
@@ -349,6 +360,46 @@ canvas{
   <canvas id="canvas" width="800" height="533"></canvas>
 </section>
 </main>
+
+<div id="guide" class="modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+  <div class="dialog">
+    <h2 id="guideTitle">✉ STAMP ATELIER 사용 안내</h2>
+    <div class="body">
+      <h4>시작하기</h4>
+      <ul>
+        <li>왼쪽 위 "이미지"를 클릭하거나 사진을 끌어다 놓아 한 장을 불러오세요. 우표 크기는 이미지 비율에 맞춰 자동으로 정해져요.</li>
+      </ul>
+      <h4>이미지 다루기</h4>
+      <ul>
+        <li>미리보기에서 이미지를 드래그하면 위치가 옮겨져요. 확대·회전·밝기·가로/세로 이동은 "이미지 조정"에서 조절하고, "되돌리기", "중앙으로", "초기화"로 되돌릴 수 있어요.</li>
+        <li>"이동 제한 – 액자 안에서만"을 켜면 액자 틀 밖으로 나간 이미지 부분이 보이지 않아요.</li>
+        <li>"이미지 모서리"에서 둥글게 / 사선 컷 / 안쪽 둥글게와 크기, 적용할 모서리를 고르고, "이미지 필터"로 분위기를 바꿔 보세요.</li>
+      </ul>
+      <h4>우표 꾸미기</h4>
+      <ul>
+        <li>"우표 테두리": 톱니·물결 등 스타일, 톱니 크기, 여백, 액자 외곽선(이미지 테두리) 표시를 정해요.</li>
+        <li>"종이 질감": 질감 종류와 강도를 고르고, "내 이미지…"로 원하는 질감 이미지를 불러올 수 있어요.</li>
+        <li>"여백 색상": 단색 또는 좌→우 / 상→하 그라데이션을 쓸 수 있어요.</li>
+        <li>"문구": 글자, 글꼴("＋ 폰트 불러오기…"로 내 폰트 추가), 색, 크기, 가로/세로 이동, 외곽선을 정해요.</li>
+      </ul>
+      <h4>저장하기</h4>
+      <ul>
+        <li>헤더의 "저장 크기"에 너비나 높이를 입력하면 비율에 맞춰 나머지가 자동 계산돼요. (최대 8000px)</li>
+        <li>"PNG 저장"(Ctrl+S)을 누르면 톱니 구멍과 모서리 바깥이 투명한 PNG로 저장돼요.</li>
+        <li>🌙/☀ 버튼으로 라이트·다크 화면을 바꿀 수 있어요. 투명한 부분은 화면 배경이 비쳐 보이는 것으로 확인할 수 있고, 저장되는 PNG에는 영향이 없어요.</li>
+      </ul>
+      <h4>설정</h4>
+      <ul>
+        <li>설정은 이 브라우저에 자동으로 저장돼요. 불러온 폰트·텍스처 파일도 저장되지만 우표에 올린 이미지는 저장되지 않아요.</li>
+        <li>"설정 초기화"는 모든 설정과 저장된 폰트·텍스처를 지우고, "새로 만들기"는 이미지와 문구를 비워요.</li>
+      </ul>
+    </div>
+    <div class="foot">
+      <span class="made">이 사이트는 바이브코딩으로 제작되었습니다.</span>
+      <button id="guideClose" class="primary">닫기</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -750,21 +801,27 @@ $("captionFont").addEventListener("change",e=>{
   if(e.target.value==="__load"){ e.target.value=prevFont; draw(); $("fontFile").click(); }
   else prevFont=e.target.value;
 });
+const userFaces=[]; // 불러온 폰트 (설정 초기화 시 제거)
+async function addUserFont(buf,name,n){
+  const fam=`UserFont${n}`;
+  const face=new FontFace(fam,buf,{weight:"100 900"});
+  await face.load();
+  document.fonts.add(face); userFaces.push(face);
+  CAPTION_FONTS["user"+n]=`"${fam}", sans-serif`;
+  const o=document.createElement("option");
+  o.value="user"+n; o.textContent=name.replace(/\.[^.]+$/,"");
+  const sel=$("captionFont");
+  sel.insertBefore(o,sel.querySelector('option[value="__load"]'));
+}
 $("fontFile").onchange=async e=>{
   const f=e.target.files[0]; e.target.value="";
   if(!f) return;
   try{
-    const n=++userFontN, fam=`UserFont${n}`;
-    const face=new FontFace(fam,await f.arrayBuffer(),{weight:"100 900"});
-    await face.load();
-    document.fonts.add(face);
-    CAPTION_FONTS["user"+n]=`"${fam}", sans-serif`;
-    const o=document.createElement("option");
-    o.value="user"+n; o.textContent=f.name.replace(/\.[^.]+$/,"");
-    const sel=$("captionFont");
-    sel.insertBefore(o,sel.querySelector('option[value="__load"]'));
-    sel.value=prevFont="user"+n;
+    const buf=await f.arrayBuffer(), n=++userFontN;
+    await addUserFont(buf,f.name,n);
+    $("captionFont").value=prevFont="user"+n;
     draw();
+    dbPut({id:"font:"+n,kind:"font",n,name:f.name,data:buf});
   }catch(err){ alert("폰트를 불러오지 못했어요: "+f.name); }
 };
 $("cornerSize").oninput=e=>{setText("cornerSizeVal",`${e.target.value} px`);draw()};
@@ -786,16 +843,19 @@ $("textureStyle").addEventListener("input",()=>$("texCustom").classList.toggle("
 $("gradMode").addEventListener("input",()=>$("paperColor2").classList.toggle("hidden",$("gradMode").value==="none"));
 $("borderStyle").addEventListener("input",()=>$("borderColorField").classList.toggle("hidden",$("borderStyle").value!=="round"));
 $("texBtn").onclick=()=>$("texFile").click();
-$("texFile").onchange=e=>{
+const TEX_HINT='강도는 위의 "종이 질감" 슬라이더로 조절해요';
+function setTexture(blob,name){
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{texImg=im;$("texName").textContent=`${name} · ${im.naturalWidth} × ${im.naturalHeight}px`;draw();res(true)};
+    im.onerror=()=>res(false);
+    im.src=URL.createObjectURL(blob);
+  });
+}
+$("texFile").onchange=async e=>{
   const f=e.target.files[0];
   if(!f||!f.type.startsWith("image/"))return;
-  const rd=new FileReader();
-  rd.onload=ev=>{
-    const im=new Image();
-    im.onload=()=>{texImg=im;$("texName").textContent=`${f.name} · ${im.naturalWidth} × ${im.naturalHeight}px`;draw()};
-    im.src=ev.target.result;
-  };
-  rd.readAsDataURL(f);
+  if(await setTexture(f,f.name)) dbPut({id:"texture",kind:"texture",name:f.name,data:f});
 };
 
 // ---- 이미지 가로/세로 이동 (드래그와 슬라이더가 서로 동기화) ----
@@ -877,6 +937,18 @@ canvas.addEventListener("pointermove",e=>{
 canvas.addEventListener("pointerup",()=>{drag=null;commit()});
 canvas.addEventListener("pointercancel",()=>{drag=null;commit()});
 
+// ---- 사용 안내: 버튼으로 열기 / 브라우저를 처음 열 때 한 번만 자동 표시 ----
+const GUIDE_KEY="stampAtelier.guideSeen.v1";
+function openGuide(){ $("guide").classList.add("open"); $("guideClose").focus(); }
+function closeGuide(){ $("guide").classList.remove("open"); }
+$("guideBtn").onclick=openGuide;
+$("guideClose").onclick=closeGuide;
+$("guide").addEventListener("pointerdown",e=>{ if(e.target===$("guide")) closeGuide(); });
+window.addEventListener("keydown",e=>{ if(e.key==="Escape") closeGuide(); });
+window.addEventListener("load",()=>{
+  try{ if(!localStorage.getItem(GUIDE_KEY)){ localStorage.setItem(GUIDE_KEY,"1"); openGuide(); } }catch(e){}
+});
+
 // ---- 설정 저장(localStorage) / 설정 초기화 ----
 // 이미지·불러온 폰트/텍스처 파일은 저장하지 않고, 이미지에 종속된 값(확대·회전·이동)도 저장하지 않음.
 const SETTINGS_KEY="stampAtelier.settings.v1";
@@ -911,6 +983,44 @@ function applySettings(o){
   setTheme(o.theme==="light"?"light":"dark");
   prevFont=$("captionFont").value;
 }
+// 불러온 폰트/텍스처 파일은 용량이 커서 localStorage 대신 IndexedDB에 저장
+function dbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open("stampAtelier",1);
+    r.onupgradeneeded=()=>r.result.createObjectStore("assets",{keyPath:"id"});
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+async function dbPut(rec){
+  try{ const db=await dbOpen();
+    await new Promise((res,rej)=>{const tx=db.transaction("assets","readwrite");tx.objectStore("assets").put(rec);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+  }catch(e){}
+}
+async function dbAll(){
+  try{ const db=await dbOpen();
+    return await new Promise((res,rej)=>{const r=db.transaction("assets").objectStore("assets").getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+  }catch(e){ return []; }
+}
+async function dbClear(){
+  try{ const db=await dbOpen();
+    await new Promise((res,rej)=>{const tx=db.transaction("assets","readwrite");tx.objectStore("assets").clear();tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+  }catch(e){}
+}
+async function restoreAssets(){
+  const recs=(await dbAll()).sort((a,b)=>(a.n||0)-(b.n||0));
+  for(const r of recs){
+    try{
+      if(r.kind==="font"){ userFontN=Math.max(userFontN,r.n); await addUserFont(r.data,r.name,r.n); }
+      else if(r.kind==="texture"){ await setTexture(r.data,r.name); }
+    }catch(e){}
+  }
+}
+function clearAssets(){
+  userFaces.forEach(f=>document.fonts.delete(f)); userFaces.length=0;
+  $("captionFont").querySelectorAll('option[value^="user"]').forEach(o=>{delete CAPTION_FONTS[o.value];o.remove();});
+  userFontN=0; texImg=null; $("texName").textContent=TEX_HINT;
+  return dbClear();
+}
 let settingsReady=false, saveTimer=0;
 function scheduleSave(){
   if(!settingsReady) return;
@@ -918,14 +1028,16 @@ function scheduleSave(){
   saveTimer=setTimeout(()=>{ try{ localStorage.setItem(SETTINGS_KEY,JSON.stringify(collectSettings())); }catch(e){} },300);
 }
 $("settingsResetBtn").onclick=()=>{
-  if(!confirm("모든 설정을 기본값으로 되돌릴까요?\n(불러온 이미지는 그대로 유지돼요)")) return;
+  if(!confirm("모든 설정을 기본값으로 되돌리고, 저장된 폰트·텍스처 파일도 지울까요?\n(불러온 이미지는 그대로 유지돼요)")) return;
+  clearAssets();
   applySettings(defaultSettings());
   applyAdj({scale:1,rotation:0,brightness:1,offsetX:0,offsetY:0});
   hist=[]; committed=adjKeys(); updateUndo(); syncOut();
   try{ localStorage.removeItem(SETTINGS_KEY); }catch(e){}
 };
 // 브라우저의 폼 값 복원이 끝난 뒤에 저장된 설정을 적용
-window.addEventListener("load",()=>{
+window.addEventListener("load",async()=>{
+  await restoreAssets();
   try{ const saved=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); if(saved) applySettings(saved); }catch(e){}
   settingsReady=true;
   draw();
