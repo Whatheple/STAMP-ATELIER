@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stamp Atelier</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#171717;--panel:#222;--panel2:#292929;--line:#3b3b3b;
+  --text:#eee;--muted:#aaa;--accent:#d8c28f;
+  --hdr:#1d1d1d;--btn:#303030;--btn-line:#494949;--btn-hover:#393939;--on-accent:#161616;
+  --h3:#b8b8b8;--label:#ddd;--chk:#ccc;--input:#171717;--input-line:#444;
+  --drop-bg:#1b1b1b;--drop-line:#555;--drop-text:#aaa;--drop-hover:#ddd;
+  --dot:#333;--hint:#999;--badge-text:#bbb;--badge-line:#3d3d3d;--shadow:#0009;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#e6e6e6;--panel:#f4f4f4;--panel2:#fff;--line:#d0d0d0;
+  --text:#222;--muted:#666;--accent:#a8842f;
+  --hdr:#fafafa;--btn:#ececec;--btn-line:#c4c4c4;--btn-hover:#e0e0e0;--on-accent:#fff;
+  --h3:#666;--label:#333;--chk:#444;--input:#fff;--input-line:#c4c4c4;
+  --drop-bg:#fafafa;--drop-line:#bbb;--drop-text:#666;--drop-hover:#222;
+  --dot:#c8c8c8;--hint:#777;--badge-text:#555;--badge-line:#ccc;--shadow:#0003;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  height:100vh;overflow:hidden;
+}
+header{
+  height:56px;border-bottom:1px solid var(--line);background:var(--hdr);
+  display:flex;align-items:center;padding:0 16px;gap:12px;
+}
+.logo{font-weight:800;letter-spacing:.08em}.muted{color:var(--muted);font-size:12px}
+.spacer{flex:1}
+button{
+  color:inherit;background:var(--btn);border:1px solid var(--btn-line);border-radius:7px;
+  padding:8px 11px;cursor:pointer
+}
+button:hover{background:var(--btn-hover)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+main{height:calc(100vh - 56px);display:grid;grid-template-columns:clamp(520px,48vw,640px) 1fr}
+aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;display:grid;grid-template-columns:1fr 1fr;align-content:start}
+.col+.col{border-left:1px solid var(--line)}
+.section{padding:10px 14px;border-bottom:1px solid var(--line)}
+.section h3{
+  margin:0 0 6px;color:var(--h3);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase
+}
+.field{margin:6px 0;display:grid;grid-template-columns:104px 1fr;gap:8px;align-items:center}
+.field>label{display:flex;justify-content:space-between;align-items:center;margin:0;color:var(--label);white-space:nowrap}
+.field>label span{color:var(--accent);font-size:12px}
+.field>label.chk{justify-content:flex-start;gap:6px;color:var(--chk)}
+.field>input[type=text]{grid-column:1/-1}
+.pair{display:flex;gap:8px}
+.pair>select,.pair>input[type=range]{flex:1;min-width:0}
+.sizebox{display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
+.sizebox input{width:76px}
+.btns{display:flex;gap:6px;margin-top:8px}
+.btns button{flex:1;padding:7px 4px;white-space:nowrap}
+button:disabled{opacity:.4;cursor:default}
+button:disabled:hover{background:var(--btn)}
+input[type=range]{width:100%}
+input[type=text],select,input[type=number]{
+  width:100%;background:var(--input);border:1px solid var(--input-line);color:var(--text);
+  border-radius:6px;padding:6px 8px
+}
+input[type=color]{
+  width:46px;height:34px;padding:2px;border-radius:6px;
+  background:var(--input);border:1px solid var(--input-line)
+}
+.inline{display:flex;gap:8px;align-items:center}
+.inline>*:first-child{flex:1}
+.drop{
+  border:1px dashed var(--drop-line);border-radius:9px;padding:12px 14px;text-align:center;
+  color:var(--drop-text);cursor:pointer;background:var(--drop-bg)
+}
+.drop:hover{border-color:#8a7b59;color:var(--drop-hover)}
+.preview{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:auto;
+  background:
+    radial-gradient(var(--dot) 1px,transparent 1px);
+  background-size:16px 16px;
+}
+canvas{
+  max-width:90%;max-height:88%;
+  box-shadow:0 24px 65px var(--shadow);
+}
+.hidden{display:none}
+.hint{color:var(--hint);font-size:12px;margin-top:7px}
+.badge{
+  display:inline-block;background:var(--input);border:1px solid var(--badge-line);
+  padding:3px 7px;border-radius:99px;font-size:11px;color:var(--badge-text)
+}
+@media(max-width:760px){
+  body{overflow:auto;height:auto}header{position:sticky;top:0;z-index:4}
+  main{height:auto;display:block}.preview{height:68vh;min-height:460px}
+  aside{border-right:0;border-top:1px solid var(--line);grid-template-columns:1fr}.col+.col{border-left:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">✉ STAMP ATELIER</div>
+  <div class="muted">single image stamp maker</div>
+  <div class="spacer"></div>
+  <div class="sizebox" title="저장할 PNG 크기 (비율 유지)">
+    <span class="muted">저장 크기</span>
+    <input id="outW" type="number" min="1" max="8000" value="800">
+    <span class="muted">×</span>
+    <input id="outH" type="number" min="1" max="8000" value="533">
+    <span class="muted">px</span>
+  </div>
+  <button id="themeBtn" title="라이트/다크 전환">🌙 다크</button>
+  <button id="resetBtn">새로 만들기</button>
+  <button id="saveBtn" class="primary">PNG 저장</button>
+</header>
+
+<main>
+<aside>
+<div class="col">
+  <div class="section">
+    <h3>이미지</h3>
+    <div id="drop" class="drop">
+      <div style="font-size:20px;margin-bottom:2px">＋</div>
+      <div>이미지를 불러오세요</div>
+      <div class="hint">한 장만 사용합니다 · 원본 비율 자동 적용</div>
+    </div>
+    <input id="file" class="hidden" type="file" accept="image/*">
+    <div id="fileName" class="hint"></div>
+  </div>
+
+  <div class="section">
+    <h3>이미지 조정</h3>
+    <div class="field">
+      <label>확대 <span id="scaleVal">100%</span></label>
+      <input id="scale" type="range" min="50" max="160" value="100">
+    </div>
+    <div class="field">
+      <label>회전 <span id="rotationVal">0°</span></label>
+      <input id="rotation" type="range" min="-180" max="180" value="0">
+    </div>
+    <div class="field">
+      <label>밝기 <span id="brightnessVal">100%</span></label>
+      <input id="brightness" type="range" min="50" max="150" value="100">
+    </div>
+    <div class="field">
+      <label>흑백 <span id="grayVal">0%</span></label>
+      <input id="gray" type="range" min="0" max="100" value="0">
+    </div>
+    <div class="field">
+      <label>가로 이동 <span id="imgXVal">0%</span></label>
+      <input id="imgX" type="range" min="-50" max="50" step="0.5" value="0">
+    </div>
+    <div class="field">
+      <label>세로 이동 <span id="imgYVal">0%</span></label>
+      <input id="imgY" type="range" min="-50" max="50" step="0.5" value="0">
+    </div>
+    <div class="btns"><button id="undoBtn" disabled>↶ 되돌리기</button><button id="centerBtn">중앙으로</button><button id="adjResetBtn">초기화</button></div>
+  </div>
+
+  <div class="section">
+    <h3>문구</h3>
+    <div class="field"><input id="caption" type="text" placeholder="예: KOREA · 2026"></div>
+    <div class="field">
+      <label>글꼴 · 색</label>
+      <div class="pair">
+        <select id="captionFont">
+          <option value="serif">세리프 (기본)</option>
+          <option value="sans">고딕</option>
+          <option value="myeongjo">명조</option>
+          <option value="mono">모노스페이스</option>
+          <option value="script">필기체</option>
+          <option value="heavy">굵은 고딕</option>
+        </select>
+        <input id="captionColor" type="color" value="#1e1c18" title="글자 색">
+      </div>
+    </div>
+    <div class="field">
+      <label>크기 <span id="fontVal">34 px</span></label>
+      <input id="fontSize" type="range" min="10" max="90" value="34">
+    </div>
+    <div class="field">
+      <label>가로 이동 <span id="captionXVal">0%</span></label>
+      <input id="captionX" type="range" min="-50" max="50" step="0.5" value="0">
+    </div>
+    <div class="field">
+      <label>세로 이동 <span id="captionYVal">0%</span></label>
+      <input id="captionY" type="range" min="-50" max="50" step="0.5" value="0">
+    </div>
+    <div class="field">
+      <label>외곽선 <span id="captionOutlineVal">0 px</span></label>
+      <div class="pair">
+        <input id="captionOutline" type="range" min="0" max="20" value="0">
+        <input id="captionOutlineColor" type="color" value="#ffffff" title="외곽선 색">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="section">
+    <h3>우표 테두리</h3>
+    <div class="field">
+      <label>테두리 스타일</label>
+      <select id="borderStyle">
+        <option value="classic">클래식 톱니</option>
+        <option value="clean">얇은 톱니</option>
+        <option value="square">사각 톱니</option>
+        <option value="zigzag">삼각 톱니</option>
+        <option value="scallop">물결</option>
+        <option value="ticket">티켓 노치</option>
+        <option value="bevel">사선 모서리</option>
+        <option value="round">둥근 모서리</option>
+        <option value="none">없음</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>톱니 크기 <span id="perfVal">100%</span></label>
+      <input id="perf" type="range" min="50" max="800" value="100">
+    </div>
+    <div class="field">
+      <label>여백 <span id="marginVal">46 px</span></label>
+      <input id="margin" type="range" min="0" max="120" value="46">
+    </div>
+    <div id="borderColorField" class="field hidden">
+      <label>테두리 색상</label>
+      <div class="inline"><input id="borderColor" type="color" value="#f8f5ec"><span class="muted">둥근 테두리선 색</span></div>
+    </div>
+    <div class="field">
+      <label for="frame">이미지 테두리</label>
+      <label class="chk"><input id="frame" type="checkbox" checked> 액자 외곽선 표시</label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>종이 질감</h3>
+    <div class="field">
+      <label>질감 종류</label>
+      <select id="textureStyle">
+        <option value="none">없음</option>
+        <option value="dot" selected>기본 (점)</option>
+        <option value="fiber">섬유</option>
+        <option value="laid">줄무늬 (레이드지)</option>
+        <option value="canvas">캔버스 (직조)</option>
+        <option value="stain">얼룩 (빈티지)</option>
+        <option value="grain">필름 입자</option>
+        <option value="custom">내 이미지…</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>종이 질감 <span id="textureVal">12%</span></label>
+      <input id="texture" type="range" min="0" max="100" value="12">
+    </div>
+    <div id="texCustom" class="hidden">
+      <div class="field">
+        <label>텍스처</label>
+        <button id="texBtn">이미지 불러오기</button>
+      </div>
+      <div class="field">
+        <label>배치</label>
+        <select id="texFit"><option value="cover">채우기</option><option value="tile">반복 (타일)</option></select>
+      </div>
+      <div class="field">
+        <label>섞기</label>
+        <select id="texBlend"><option value="multiply">곱하기</option><option value="overlay">오버레이</option><option value="source-over">일반</option></select>
+      </div>
+      <input id="texFile" class="hidden" type="file" accept="image/*">
+      <div id="texName" class="hint">강도는 위의 "종이 질감" 슬라이더로 조절해요</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>여백 색상</h3>
+    <div class="field">
+      <label>색상</label>
+      <div class="pair"><input id="paperColor" type="color" value="#f8f5ec" title="시작 색"><input id="paperColor2" class="hidden" type="color" value="#d8c28f" title="그라데이션 끝 색"></div>
+    </div>
+    <div class="field">
+      <label>그라데이션</label>
+      <select id="gradMode">
+        <option value="none">없음 (단색)</option>
+        <option value="h">좌 → 우</option>
+        <option value="v">상 → 하</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section">
+    <span class="badge">자동 맞춤 ON</span>
+    <div class="hint">불러온 이미지의 가로세로 비율을 그대로 사용합니다. 잘리지 않도록 우표 캔버스가 자동으로 맞춰집니다.</div>
+  </div>
+</div>
+</aside>
+
+<section class="preview">
+  <canvas id="canvas" width="800" height="533"></canvas>
+</section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $("canvas"), ctx = canvas.getContext("2d");
+
+let img = null;
+let offsetX = 0, offsetY = 0;
+let scale = 1, rotation = 0, brightness = 1, gray = 0;
+
+function setText(id, value){ $(id).textContent = value; }
+
+const CAPTION_FONTS={
+  serif:'Georgia, "Times New Roman", serif',
+  sans:'system-ui, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif',
+  myeongjo:'"Nanum Myeongjo", Batang, "Noto Serif KR", AppleMyungjo, serif',
+  mono:'"Courier New", Consolas, monospace',
+  script:'"Brush Script MT", "Segoe Script", "Apple Chancery", cursive',
+  heavy:'Impact, "Arial Black", "Malgun Gothic", sans-serif'
+};
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
+function syncOut(){ $("outW").value=canvas.width; $("outH").value=canvas.height; }
+
+function autoSize(image){
+  // 화면과 출력 모두에서 과도하게 커지지 않도록 기준 긴 변을 1200px로 맞춤.
+  const maxSide = 1200;
+  const k = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+  const iw = Math.max(200, Math.round(image.naturalWidth * k));
+  const ih = Math.max(200, Math.round(image.naturalHeight * k));
+  canvas.width = iw;
+  canvas.height = ih;
+  syncOut();
+  offsetX = 0; offsetY = 0; scale = 1; rotation = 0;
+  $("scale").value = 100; $("rotation").value = 0;
+  setText("scaleVal","100%"); setText("rotationVal","0°");
+  hist=[]; committed=adjKeys(); updateUndo();
+  draw();
+}
+
+function loadFile(file){
+  if(!file || !file.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const image = new Image();
+    image.onload = () => {
+      img = image;
+      $("fileName").textContent = `${file.name} · ${image.naturalWidth} × ${image.naturalHeight}px`;
+      autoSize(image);
+    };
+    image.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+$("drop").onclick = () => $("file").click();
+$("file").onchange = e => loadFile(e.target.files[0]);
+
+$("drop").ondragover = e => { e.preventDefault(); $("drop").style.borderColor = "#b99b61"; };
+$("drop").ondragleave = () => $("drop").style.borderColor = "";
+$("drop").ondrop = e => {
+  e.preventDefault(); $("drop").style.borderColor = "";
+  loadFile(e.dataTransfer.files[0]);
+};
+
+function drawPerforatedRect(x,y,w,h, color, step=18, radius=5.2){
+  // 가장자리의 작은 원을 투명하게 도려내어 실제 우표의 천공처럼 표현합니다.
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+
+  // 모서리는 구멍 없이 온전한 이빨로 남기고, 모서리 이빨 폭 = 다른 이빨 폭이 되도록 간격 계산
+  const topN = Math.max(2, Math.floor((w+2*radius)/step));
+  const sideN = Math.max(2, Math.floor((h+2*radius)/step));
+  const tw = (w+2*radius)/topN, th = (h+2*radius)/sideN;
+
+  ctx.fillStyle = "#000";
+
+  for(let i=1;i<topN;i++){
+    const cx = x + i*tw - radius;
+    ctx.beginPath(); ctx.arc(cx, y, radius, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, y+h, radius, 0, Math.PI*2); ctx.fill();
+  }
+
+  for(let i=1;i<sideN;i++){
+    const cy = y + i*th - radius;
+    ctx.beginPath(); ctx.arc(x, cy, radius, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w, cy, radius, 0, Math.PI*2); ctx.fill();
+  }
+
+  ctx.restore();
+}
+// 추가 테두리 스타일: 사각 톱니 / 삼각 톱니 / 물결 / 티켓 노치 / 사선 모서리
+function drawEdgeStyle(style, w, h, pk){
+  const r=5.2*pk;
+  ctx.save();
+  ctx.globalCompositeOperation="destination-out";
+  ctx.fillStyle="#000";
+  if(style==="ticket"||style==="bevel"){
+    const R=Math.max(14,r*3);
+    for(const [cx,cy] of [[0,0],[w,0],[0,h],[w,h]]){
+      const sx=cx===0?1:-1, sy=cy===0?1:-1;
+      ctx.beginPath();
+      if(style==="ticket") ctx.arc(cx,cy,R,0,Math.PI*2);
+      else{ctx.moveTo(cx,cy);ctx.lineTo(cx+sx*R*1.4,cy);ctx.lineTo(cx,cy+sy*R*1.4);ctx.closePath();}
+      ctx.fill();
+    }
+  } else if(style==="zigzag"){
+    const S=r*3.2, d=S*.6;
+    const nx=Math.max(2,Math.round(w/S)), ny=Math.max(2,Math.round(h/S));
+    const tx=w/nx, ty=h/ny;
+    for(let i=0;i<nx;i++){
+      const a=i*tx,b=a+tx,m=(a+b)/2;
+      ctx.beginPath();ctx.moveTo(a,0);ctx.lineTo(b,0);ctx.lineTo(m,d);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(a,h);ctx.lineTo(b,h);ctx.lineTo(m,h-d);ctx.closePath();ctx.fill();
+    }
+    for(let i=0;i<ny;i++){
+      const a=i*ty,b=a+ty,m=(a+b)/2;
+      ctx.beginPath();ctx.moveTo(0,a);ctx.lineTo(0,b);ctx.lineTo(d,m);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(w,a);ctx.lineTo(w,b);ctx.lineTo(w-d,m);ctx.closePath();ctx.fill();
+    }
+  } else if(style==="scallop"){
+    // 물결: 구멍 중심을 모서리 포함 가장자리 전체에 균등 배치해서 모서리도 둥글게 깎음
+    const S=r*3.6;
+    const nx=Math.max(2,Math.round(w/S)), ny=Math.max(2,Math.round(h/S));
+    const sx=w/nx, sy=h/ny;
+    const bite=(cx,cy,rad)=>{ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.fill();};
+    for(let i=0;i<=nx;i++){bite(i*sx,0,sx/2+.5);bite(i*sx,h,sx/2+.5);}
+    for(let i=0;i<=ny;i++){bite(0,i*sy,sy/2+.5);bite(w,i*sy,sy/2+.5);}
+  } else { // square: 모서리는 온전히 남기고 이빨 폭이 같도록 간격 계산
+    const S=style==="scallop"?2*r:18*Math.max(1,pk);
+    const nx=Math.max(2,Math.floor((w+2*r)/S)), ny=Math.max(2,Math.floor((h+2*r)/S));
+    const sx=(w+2*r)/nx, sy=(h+2*r)/ny;
+    const cut=(cx,cy)=>{
+      if(style==="square") ctx.fillRect(cx-r,cy-r,2*r,2*r);
+      else{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();}
+    };
+    for(let i=1;i<nx;i++){const cx=i*sx-r;cut(cx,0);cut(cx,h);}
+    for(let i=1;i<ny;i++){const cy=i*sy-r;cut(0,cy);cut(w,cy);}
+  }
+  ctx.restore();
+}
+
+let texImg=null;
+
+// 불러온 텍스처 이미지를 우표의 불투명한 부분에만 합성 (구멍/둥근 모서리 바깥은 투명 유지)
+function paperCustom(amount, w, h){
+  if(!texImg) return;
+  const off=document.createElement("canvas"); off.width=w; off.height=h;
+  const o=off.getContext("2d");
+  if($("texFit").value==="tile"){
+    o.fillStyle=o.createPattern(texImg,"repeat"); o.fillRect(0,0,w,h);
+  } else {
+    const iw=texImg.naturalWidth, ih=texImg.naturalHeight, f=Math.max(w/iw,h/ih);
+    o.drawImage(texImg,(w-iw*f)/2,(h-ih*f)/2,iw*f,ih*f);
+  }
+  o.globalCompositeOperation="destination-in";
+  o.drawImage(canvas,0,0);
+  ctx.save();
+  ctx.globalCompositeOperation=$("texBlend").value;
+  ctx.globalAlpha=Math.min(1,amount/100);
+  ctx.drawImage(off,0,0);
+  ctx.restore();
+}
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// 기본(점) 외 질감. 시드 고정이라 슬라이더를 움직여도 무늬가 흔들리지 않고, 불투명한 부분(구멍 제외)에만 그림.
+function paperTexture(tex, amount, w, h){
+  const k=amount/100, r=mulberry32(20260101), u=Math.max(1,Math.max(w,h)/800);
+  const st=Math.max(2,Math.round(3*u)), lw=Math.max(1,Math.round(u));
+  ctx.save();
+  ctx.globalCompositeOperation="source-atop";
+  if(tex==="fiber"){
+    const n=Math.floor(w*h*k*0.0012);
+    ctx.lineWidth=Math.max(.5,.7*u);
+    for(let i=0;i<n;i++){
+      const x=r()*w,y=r()*h,a=r()*Math.PI*2,l=(6+r()*18)*u,b=(r()-.5)*l*.6;
+      ctx.strokeStyle=r()>.5?"rgba(70,55,40,.16)":"rgba(255,255,255,.22)";
+      ctx.beginPath();ctx.moveTo(x,y);
+      ctx.quadraticCurveTo(x+Math.cos(a)*l/2-Math.sin(a)*b,y+Math.sin(a)*l/2+Math.cos(a)*b,x+Math.cos(a)*l,y+Math.sin(a)*l);
+      ctx.stroke();
+    }
+  } else if(tex==="laid"){
+    const a=.02+.10*k;
+    for(let y=0;y<h;y+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.4+r()*.6)})`;ctx.fillRect(0,y,w,lw);}
+    for(let x=0;x<w;x+=st*12){ctx.fillStyle=`rgba(255,255,255,${a*1.2})`;ctx.fillRect(x,0,lw,h);}
+  } else if(tex==="canvas"){
+    const a=.03+.12*k;
+    for(let y=0;y<h;y+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;ctx.fillRect(0,y,w,lw);}
+    for(let x=0;x<w;x+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;ctx.fillRect(x,0,lw,h);}
+  } else if(tex==="stain"){
+    const n=4+Math.floor(k*26);
+    for(let i=0;i<n;i++){
+      const x=r()*w,y=r()*h,rad=(25+r()*110)*u;
+      const g=ctx.createRadialGradient(x,y,0,x,y,rad);
+      g.addColorStop(0,`rgba(130,95,40,${.03+.12*k*r()})`);
+      g.addColorStop(1,"rgba(130,95,40,0)");
+      ctx.fillStyle=g;ctx.fillRect(x-rad,y-rad,rad*2,rad*2);
+    }
+  } else if(tex==="grain"){
+    const id=ctx.getImageData(0,0,w,h),d=id.data,amp=k*60;
+    for(let i=0;i<d.length;i+=4){
+      if(!d[i+3])continue;
+      const v=(r()-.5)*amp;
+      d[i]+=v;d[i+1]+=v;d[i+2]+=v;
+    }
+    ctx.putImageData(id,0,0);
+  }
+  ctx.restore();
+}
+
+function paperNoise(amount, w, h){
+  if(amount <= 0) return;
+  const tex=$("textureStyle").value;
+  if(tex==="none") return;
+  if(tex==="custom"){ paperCustom(amount,w,h); return; }
+  if(tex!=="dot"){ paperTexture(tex,amount,w,h); return; }
+  const n = Math.floor(w*h*amount*0.003);
+  ctx.save(); ctx.globalAlpha = 0.10;
+  for(let i=0;i<n;i++){
+    const x=Math.random()*w, y=Math.random()*h;
+    const a=15+Math.random()*35;
+    ctx.fillStyle = Math.random()>.5 ? `rgb(${a},${a},${a})` : `rgb(${220+a},${220+a},${220+a})`;
+    ctx.fillRect(x,y,Math.random()*1.4+.3,Math.random()*1.4+.3);
+  }
+  ctx.restore();
+}
+
+function roundedImageArea(x,y,w,h,r){
+  ctx.beginPath(); ctx.roundRect(x,y,w,h,r); ctx.clip();
+}
+
+function draw(){
+  const w=canvas.width,h=canvas.height;
+  syncPos(w,h);
+  const paper=$("paperColor").value;
+  const border=$("borderColor").value;
+  const margin=+$("margin").value;
+  const style=$("borderStyle").value;
+  const texture=+$("texture").value;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle=paper;
+  const gm=$("gradMode").value;
+  if(gm!=="none"){
+    const g=gm==="h"?ctx.createLinearGradient(0,0,w,0):ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,paper);g.addColorStop(1,$("paperColor2").value);
+    ctx.fillStyle=g;
+  }
+  ctx.fillRect(0,0,w,h);
+
+  if(img){
+    const iw=img.naturalWidth, ih=img.naturalHeight;
+    const innerW=Math.max(1,w-margin*2), innerH=Math.max(1,h-margin*2);
+    const fit=Math.max(innerW/iw, innerH/ih); // 항상 영역을 꽉 채우되, 이미지가 자동 비율 유지
+    const s=fit*scale;
+
+    ctx.save();
+    ctx.translate(w/2+offsetX,h/2+offsetY);
+    ctx.rotate(rotation*Math.PI/180);
+    ctx.filter=`brightness(${brightness}) grayscale(${gray})`;
+    ctx.beginPath(); ctx.rect(-innerW/2,-innerH/2,innerW,innerH); ctx.clip();
+    ctx.drawImage(img,-iw*s/2,-ih*s/2,iw*s,ih*s);
+    ctx.restore();
+    ctx.filter="none";
+
+    // 종이 여백과 이미지 사이에 아주 얇은 내부선
+    if(style!=="none" && $("frame").checked){
+      ctx.save();
+      ctx.strokeStyle="rgba(0,0,0,.14)";
+      ctx.lineWidth=1;
+      ctx.strokeRect(margin+.5,margin+.5,innerW-1,innerH-1);
+      ctx.restore();
+    }
+  }
+
+  if(style!=="round" && style!=="none"){
+    const pk = +$("perf").value/100;
+    const step = (style==="classic" ? 18 : 25) * Math.max(1,pk);
+    if(style==="classic"||style==="clean") drawPerforatedRect(0,0,w,h,border,step,5.2*pk);
+    else drawEdgeStyle(style,w,h,pk);
+    if(img && $("frame").checked){
+      const inset = Math.min(10, margin*.15);
+      ctx.save();
+      ctx.strokeStyle = "rgba(0,0,0,.08)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(margin-inset+.5,margin-inset+.5,w-2*(margin-inset)-1,h-2*(margin-inset)-1);
+      ctx.restore();
+    }
+  } else if(style==="round"){
+    ctx.save();
+    ctx.strokeStyle=border;ctx.lineWidth=Math.max(8,margin*.25);
+    ctx.beginPath();ctx.roundRect(4,4,w-8,h-8,Math.min(24,margin));
+    ctx.stroke();ctx.restore();
+  }
+
+  const caption=$("caption").value.trim();
+  if(caption){
+    const size=+$("fontSize").value;
+    let y=h/2+size*.35;
+    const tx=w/2+(+$("captionX").value)/100*w;
+    y+=(+$("captionY").value)/100*h;
+    const ow=+$("captionOutline").value;
+
+    ctx.save();
+    ctx.font=`600 ${size}px ${CAPTION_FONTS[$("captionFont").value]||CAPTION_FONTS.serif}`;
+    ctx.textAlign="center";
+    if(ow>0){
+      ctx.lineJoin="round";ctx.lineWidth=ow*2;
+      ctx.strokeStyle=$("captionOutlineColor").value;
+      ctx.strokeText(caption,tx,y);
+    }
+    ctx.fillStyle=hexA($("captionColor").value,.88);
+    ctx.shadowColor="rgba(255,255,255,.35)";
+    ctx.shadowBlur=2;
+    ctx.fillText(caption,tx,y);
+    ctx.restore();
+  }
+
+  paperNoise(texture,w,h);
+
+  if(style==="round"){
+    // 둥근 테두리 바깥(모서리 밖)은 그라데이션·질감 포함 전부 투명하게 잘라냄
+    const lw=Math.max(8,margin*.25), rr=Math.min(24,margin)+lw/2;
+    ctx.save();
+    ctx.globalCompositeOperation="destination-in";
+    ctx.beginPath();ctx.roundRect(4-lw/2,4-lw/2,w-8+lw,h-8+lw,rr);
+    ctx.fillStyle="#000";ctx.fill();
+    ctx.restore();
+  }
+
+  if(!img){
+    ctx.fillStyle="#777";ctx.font="16px system-ui,sans-serif";ctx.textAlign="center";
+    ctx.fillText("이미지를 불러오세요",w/2,h/2);
+  }
+}
+
+$("margin").oninput=e=>{setText("marginVal",`${e.target.value} px`);draw()};
+$("perf").oninput=e=>{setText("perfVal",`${e.target.value}%`);draw()};
+$("scale").oninput=e=>{scale=+e.target.value/100;setText("scaleVal",`${e.target.value}%`);draw()};
+$("rotation").oninput=e=>{rotation=+e.target.value;setText("rotationVal",`${e.target.value}°`);draw()};
+$("brightness").oninput=e=>{brightness=+e.target.value/100;setText("brightnessVal",`${e.target.value}%`);draw()};
+$("gray").oninput=e=>{gray=+e.target.value/100;setText("grayVal",`${e.target.value}%`);draw()};
+$("captionX").oninput=e=>{setText("captionXVal",`${e.target.value}%`);draw()};
+$("captionY").oninput=e=>{setText("captionYVal",`${e.target.value}%`);draw()};
+$("captionOutline").oninput=e=>{setText("captionOutlineVal",`${e.target.value} px`);draw()};
+$("fontSize").oninput=e=>{setText("fontVal",`${e.target.value} px`);draw()};
+$("texture").oninput=e=>{setText("textureVal",`${e.target.value}%`);draw()};
+["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor"].forEach(id=>$(id).addEventListener("input",draw));
+
+$("themeBtn").onclick=()=>{
+  const root=document.documentElement, light=root.dataset.theme!=="light";
+  root.dataset.theme=light?"light":"dark";
+  $("themeBtn").textContent=light?"☀ 라이트":"🌙 다크";
+};
+
+$("textureStyle").addEventListener("input",()=>$("texCustom").classList.toggle("hidden",$("textureStyle").value!=="custom"));
+$("gradMode").addEventListener("input",()=>$("paperColor2").classList.toggle("hidden",$("gradMode").value==="none"));
+$("borderStyle").addEventListener("input",()=>$("borderColorField").classList.toggle("hidden",$("borderStyle").value!=="round"));
+$("texBtn").onclick=()=>$("texFile").click();
+$("texFile").onchange=e=>{
+  const f=e.target.files[0];
+  if(!f||!f.type.startsWith("image/"))return;
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    const im=new Image();
+    im.onload=()=>{texImg=im;$("texName").textContent=`${f.name} · ${im.naturalWidth} × ${im.naturalHeight}px`;draw()};
+    im.src=ev.target.result;
+  };
+  rd.readAsDataURL(f);
+};
+
+// ---- 이미지 가로/세로 이동 (드래그와 슬라이더가 서로 동기화) ----
+function syncPos(w,h){
+  const px=Math.round(offsetX/w*1000)/10, py=Math.round(offsetY/h*1000)/10;
+  $("imgX").value=px; $("imgY").value=py;
+  setText("imgXVal",`${px}%`); setText("imgYVal",`${py}%`);
+}
+$("imgX").oninput=e=>{offsetX=+e.target.value/100*canvas.width;draw()};
+$("imgY").oninput=e=>{offsetY=+e.target.value/100*canvas.height;draw()};
+
+// ---- 이미지 조정 되돌리기 / 초기화 ----
+let hist=[], committed={scale:1,rotation:0,brightness:1,gray:0,offsetX:0,offsetY:0};
+const adjKeys=()=>({scale,rotation,brightness,gray,offsetX,offsetY});
+function updateUndo(){ $("undoBtn").disabled=!hist.length; }
+function commit(){
+  const cur=adjKeys();
+  if(JSON.stringify(cur)===JSON.stringify(committed)) return;
+  hist.push(committed); if(hist.length>50) hist.shift();
+  committed=cur; updateUndo();
+}
+function applyAdj(a){
+  ({scale,rotation,brightness,gray,offsetX,offsetY}=a);
+  $("scale").value=Math.round(scale*100); setText("scaleVal",`${Math.round(scale*100)}%`);
+  $("rotation").value=rotation; setText("rotationVal",`${rotation}°`);
+  $("brightness").value=Math.round(brightness*100); setText("brightnessVal",`${Math.round(brightness*100)}%`);
+  $("gray").value=Math.round(gray*100); setText("grayVal",`${Math.round(gray*100)}%`);
+  draw();
+}
+["scale","rotation","brightness","gray","imgX","imgY"].forEach(id=>$(id).addEventListener("change",commit));
+$("undoBtn").onclick=()=>{ if(!hist.length) return; const a=hist.pop(); committed=a; applyAdj(a); updateUndo(); };
+$("adjResetBtn").onclick=()=>{ applyAdj({scale:1,rotation:0,brightness:1,gray:0,offsetX:0,offsetY:0}); commit(); };
+$("centerBtn").onclick=()=>{offsetX=0;offsetY=0;draw();commit()};
+
+$("resetBtn").onclick=()=>{
+  img=null;offsetX=offsetY=0;scale=1;rotation=0;brightness=1;gray=0;
+  $("file").value="";$("fileName").textContent="";$("caption").value="";
+  canvas.width=800;canvas.height=533;syncOut();hist=[];committed=adjKeys();updateUndo();
+  $("scale").value=100;$("rotation").value=0;$("brightness").value=100;$("gray").value=0;
+  draw();
+};
+
+$("saveBtn").onclick=()=>{
+  const W=Math.round(+$("outW").value), H=Math.round(+$("outH").value);
+  let src=canvas;
+  if(W>0&&H>0&&(W!==canvas.width||H!==canvas.height)){
+    src=document.createElement("canvas"); src.width=W; src.height=H;
+    const c=src.getContext("2d"); c.imageSmoothingEnabled=true; c.imageSmoothingQuality="high";
+    c.drawImage(canvas,0,0,W,H);
+  }
+  const a=document.createElement("a");
+  a.download="stamp.png";
+  a.href=src.toDataURL("image/png");
+  a.click();
+};
+// 저장 크기: 한쪽을 입력하면 현재 캔버스 비율에 맞춰 다른 쪽을 자동 계산 (한 변 최대 8000px)
+function setOut(wv,hv){ const k=Math.min(1,8000/Math.max(wv,hv)); $("outW").value=Math.round(wv*k); $("outH").value=Math.round(hv*k); }
+$("outW").oninput=()=>{const v=+$("outW").value;if(v>0){const hh=v*canvas.height/canvas.width;if(Math.max(v,hh)>8000)setOut(v,hh);else $("outH").value=Math.round(hh);}};
+$("outH").oninput=()=>{const v=+$("outH").value;if(v>0){const ww=v*canvas.width/canvas.height;if(Math.max(v,ww)>8000)setOut(ww,v);else $("outW").value=Math.round(ww);}};
+window.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();$("saveBtn").click()}
+});
+
+let drag=null;
+canvas.addEventListener("pointerdown",e=>{
+  if(!img)return;
+  const r=canvas.getBoundingClientRect();
+  const x=(e.clientX-r.left)*canvas.width/r.width;
+  const y=(e.clientY-r.top)*canvas.height/r.height;
+  drag={x,y,ox:offsetX,oy:offsetY};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  const r=canvas.getBoundingClientRect();
+  const x=(e.clientX-r.left)*canvas.width/r.width;
+  const y=(e.clientY-r.top)*canvas.height/r.height;
+  offsetX=drag.ox+(x-drag.x);offsetY=drag.oy+(y-drag.y);draw();
+});
+canvas.addEventListener("pointerup",()=>{drag=null;commit()});
+canvas.addEventListener("pointercancel",()=>{drag=null;commit()});
+
+draw();
+</script>
+</body>
+</html>
