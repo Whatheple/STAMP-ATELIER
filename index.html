@@ -56,6 +56,7 @@ aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;d
 .field>input[type=text]{grid-column:1/-1}
 .pair{display:flex;gap:8px}
 .pair>select,.pair>input[type=range]{flex:1;min-width:0}
+.pair>input[type=color]{flex:none}
 .sizebox{display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
 .sizebox input{width:76px}
 .btns{display:flex;gap:6px;margin-top:8px}
@@ -75,7 +76,14 @@ button:disabled:hover{background:var(--btn)}
 .captabs{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .captabs button{padding:4px 6px;min-width:28px}
 .captabs button.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
-.captabs .capdel{margin-left:auto;font-size:12px;padding:4px 8px}
+.captabs .caprt{margin-left:auto;display:flex;gap:4px}
+.captabs .caprt button{font-size:12px;padding:4px 7px;min-width:0}
+input.chip{width:30px;height:28px}
+#gxChips{display:flex;gap:4px}
+.pair>button{padding:3px 8px;flex:none}
+.chkwrap{display:flex;flex-wrap:wrap;gap:3px 8px}
+.chkwrap>label{display:flex;align-items:center;gap:4px;color:var(--chk);white-space:nowrap;font-size:13px}
+.chkwrap>label:has(input:disabled){opacity:.45}
 .pair.corners{gap:4px}
 .pair.corners input{margin:0}
 .pair>label{display:flex;align-items:center;gap:3px;color:var(--chk);white-space:nowrap}
@@ -144,8 +152,7 @@ canvas{
   <div class="section">
     <h3>이미지</h3>
     <div id="drop" class="drop">
-      <div style="font-size:20px;margin-bottom:2px">＋</div>
-      <div>이미지를 불러오세요</div>
+      <div>＋ 이미지를 불러오세요</div>
       <div class="hint">한 장만 사용합니다 · 원본 비율 자동 적용</div>
     </div>
     <input id="file" class="hidden" type="file" accept="image/*">
@@ -174,9 +181,13 @@ canvas{
       <label>세로 이동 <span id="imgYVal">0%</span></label>
       <input id="imgY" type="range" min="-50" max="50" step="0.5" value="0">
     </div>
-    <div class="field">
-      <label for="limitMove">이동 제한</label>
-      <label class="chk" title="이미지는 자유롭게 움직이되, 액자 틀 밖으로 나간 부분은 보이지 않게 숨김"><input id="limitMove" type="checkbox"> 액자 안에서만</label>
+    <div class="field" style="align-items:start">
+      <label>이동 제한</label>
+      <div class="chkwrap">
+        <label title="이미지는 자유롭게 움직이되, 액자 틀 밖으로 나간 부분은 보이지 않게 숨김"><input id="limitMove" type="checkbox">액자 안에서만</label>
+        <label title="'액자 안에서만'과 함께 켜면, 이미지가 보이는 부분만큼만 액자 테두리선이 이미지를 둘러요"><input id="frameWrap" type="checkbox" disabled>액자 유지</label>
+        <label title="'액자 안에서만'이 꺼져 있을 때, 이미지를 움직이면 액자 테두리선도 같이 움직여요"><input id="frameFollow" type="checkbox">액자도 이동</label>
+      </div>
     </div>
     <div class="btns"><button id="undoBtn" disabled>↶ 되돌리기</button><button id="centerBtn">중앙으로</button><button id="adjResetBtn">초기화</button></div>
   </div>
@@ -228,6 +239,35 @@ canvas{
       </div>
     </div>
   </div>
+
+  <div class="section">
+    <h3>여백 색상</h3>
+    <div class="field">
+      <label>색상 · 방식</label>
+      <div class="pair">
+        <input id="paperColor" class="chip" type="color" value="#f8f5ec" title="시작 색">
+        <input id="paperColor2" class="chip hidden" type="color" value="#d8c28f" title="두 번째 색">
+        <select id="gradMode">
+          <option value="none">단색</option>
+          <option value="lin">그라데이션</option>
+        </select>
+      </div>
+    </div>
+    <div id="gradMore" class="hidden">
+      <div class="field">
+        <label>추가 색상</label>
+        <div class="pair">
+          <button id="gxAdd" title="색상 추가 (최대 5색)">＋</button>
+          <button id="gxDel" title="마지막 추가 색상 삭제">－</button>
+          <span id="gxChips"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>각도 <span id="gradAngleVal">90°</span></label>
+        <input id="gradAngle" type="range" min="0" max="360" value="90">
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="col">
@@ -266,22 +306,6 @@ canvas{
     <div class="field">
       <label for="frame">이미지 테두리</label>
       <label class="chk"><input id="frame" type="checkbox" checked> 액자 외곽선 표시</label>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>여백 색상</h3>
-    <div class="field">
-      <label>색상</label>
-      <div class="pair"><input id="paperColor" type="color" value="#f8f5ec" title="시작 색"><input id="paperColor2" class="hidden" type="color" value="#d8c28f" title="그라데이션 끝 색"></div>
-    </div>
-    <div class="field">
-      <label>그라데이션</label>
-      <select id="gradMode">
-        <option value="none">없음 (단색)</option>
-        <option value="h">좌 → 우</option>
-        <option value="v">상 → 하</option>
-      </select>
     </div>
   </div>
 
@@ -366,6 +390,31 @@ canvas{
       <input id="capScaleY" type="range" min="30" max="300" value="100">
     </div>
     <div class="field">
+      <label>회전 <span id="capRotVal">0°</span></label>
+      <input id="capRot" type="range" min="-180" max="180" value="0">
+    </div>
+    <div class="field">
+      <label>투명도 <span id="capAlphaVal">12%</span></label>
+      <input id="capAlpha" type="range" min="0" max="100" value="12">
+    </div>
+    <div class="field">
+      <label>혼합</label>
+      <select id="capBlend">
+        <option value="source-over">일반</option>
+        <option value="multiply">곱하기</option>
+        <option value="screen">스크린</option>
+        <option value="overlay">오버레이</option>
+        <option value="soft-light">소프트 라이트</option>
+        <option value="hard-light">하드 라이트</option>
+        <option value="color-dodge">색상 닷지</option>
+        <option value="color-burn">색상 번</option>
+        <option value="darken">어둡게</option>
+        <option value="lighten">밝게</option>
+        <option value="difference">차이</option>
+        <option value="exclusion">제외</option>
+      </select>
+    </div>
+    <div class="field">
       <label>가로 이동 <span id="captionXVal">0%</span></label>
       <input id="captionX" type="range" min="-50" max="50" step="0.5" value="0">
     </div>
@@ -400,15 +449,15 @@ canvas{
       <h4>이미지 다루기</h4>
       <ul>
         <li>미리보기에서 이미지를 드래그하면 위치가 옮겨져요. 확대·회전·밝기·가로/세로 이동은 "이미지 조정"에서 조절하고, "되돌리기", "중앙으로", "초기화"로 되돌릴 수 있어요.</li>
-        <li>"이동 제한 – 액자 안에서만"을 켜면 액자 틀 밖으로 나간 이미지 부분이 보이지 않아요.</li>
+        <li>"이동 제한 – 액자 안에서만"을 켜면 액자 틀 밖으로 나간 이미지 부분이 보이지 않고, "액자 유지"를 같이 켜면 보이는 이미지만큼만 액자 테두리선이 둘러져요. "액자도 이동"은 "액자 안에서만"이 꺼져 있을 때 이미지와 함께 액자 테두리선도 움직여요.</li>
         <li>"이미지 모서리"에서 둥글게 / 사선 컷 / 안쪽 둥글게와 크기, 적용할 모서리를 고르고, "이미지 필터"로 분위기를 바꿔 보세요.</li>
       </ul>
       <h4>우표 꾸미기</h4>
       <ul>
         <li>"우표 테두리": 톱니·물결 등 스타일, 톱니 크기, 여백, 액자 외곽선(이미지 테두리) 표시를 정해요. 둥근·사선 모서리는 "모서리 깎기"로 깎는 크기를 조절해요.</li>
         <li>"종이 질감": 질감 종류와 강도를 고르고, "내 이미지…"로 원하는 질감 이미지를 불러올 수 있어요.</li>
-        <li>"여백 색상": 단색 또는 좌→우 / 상→하 그라데이션을 쓸 수 있어요.</li>
-        <li>"문구": 글자, 글꼴("＋ 폰트 불러오기…"로 내 폰트 추가), 색, 굵게/기울임, 크기, 자간, 가로/세로 비율, 위치, 외곽선을 정해요. 문구 번호 옆 "+"를 누르면 지금 문구의 설정을 복사해 새 문구를 만들어요. (최대 4개)</li>
+        <li>"여백 색상": 단색 또는 그라데이션(각도 조절, 색상은 ＋로 최대 5개까지)을 쓸 수 있어요.</li>
+        <li>"문구": 글자, 글꼴("＋ 폰트 불러오기…"로 내 폰트 추가), 색, 굵게/기울임, 크기, 자간, 가로/세로 비율, 회전, 투명도, 혼합(곱하기·오버레이 등), 위치, 외곽선을 정해요. 문구가 여러 개면 ◀ ▶로 레이어 순서(번호가 클수록 위)를 바꿀 수 있어요. 문구 번호 옆 "+"를 누르면 지금 문구의 설정을 복사해 새 문구를 만들어요. (최대 4개)</li>
       </ul>
       <h4>저장하기</h4>
       <ul>
@@ -452,14 +501,15 @@ function syncOut(){ $("outW").value=canvas.width; $("outH").value=canvas.height;
 
 // ---- 문구: 최대 4개. 탭으로 고른 문구를 입력칸에서 편집하고, + 는 현재 문구 설정을 복사해 새 문구를 만듦 ----
 const CAP_MAX=4;
-const capDefault=()=>({text:"",font:"serif",color:"#1e1c18",size:34,bold:true,italic:false,spacing:0,sx:100,sy:100,x:0,y:0,outline:0,outlineColor:"#ffffff"});
+const capDefault=()=>({text:"",font:"serif",color:"#1e1c18",size:34,bold:true,italic:false,spacing:0,sx:100,sy:100,x:0,y:0,outline:0,outlineColor:"#ffffff",rot:0,alpha:12,blend:"source-over"});
 let captions=[capDefault()], capCur=0;
 function readCap(){
   return {text:$("caption").value, font:$("captionFont").value, color:$("captionColor").value,
     size:+$("fontSize").value, bold:$("capBold").checked, italic:$("capItalic").checked,
     spacing:+$("capSpacing").value, sx:+$("capScaleX").value, sy:+$("capScaleY").value,
     x:+$("captionX").value, y:+$("captionY").value,
-    outline:+$("captionOutline").value, outlineColor:$("captionOutlineColor").value};
+    outline:+$("captionOutline").value, outlineColor:$("captionOutlineColor").value,
+    rot:+$("capRot").value, alpha:+$("capAlpha").value, blend:$("capBlend").value};
 }
 function writeCap(c){
   $("caption").value=c.text;
@@ -472,6 +522,8 @@ function writeCap(c){
   set("capScaleX",c.sx,"capScaleXVal","%"); set("capScaleY",c.sy,"capScaleYVal","%");
   set("captionX",c.x,"captionXVal","%"); set("captionY",c.y,"captionYVal","%");
   set("captionOutline",c.outline,"captionOutlineVal"," px");
+  set("capRot",c.rot,"capRotVal","°"); set("capAlpha",c.alpha,"capAlphaVal","%");
+  const bl=$("capBlend"); bl.value=[...bl.options].some(o=>o.value===c.blend)?c.blend:"source-over";
   $("captionOutlineColor").value=c.outlineColor;
 }
 function selectCap(i){ captions[capCur]=readCap(); capCur=i; writeCap(captions[i]); renderTabs(); draw(); }
@@ -479,6 +531,11 @@ function addCap(){
   if(captions.length>=CAP_MAX) return;
   captions[capCur]=readCap(); captions.push({...captions[capCur]}); capCur=captions.length-1;
   writeCap(captions[capCur]); renderTabs(); draw();
+}
+function moveCap(d){ // 번호가 클수록 위에 그려지는 레이어. 선택한 문구를 앞/뒤 번호와 맞바꿈
+  const j=capCur+d; if(j<0||j>=captions.length) return;
+  captions[capCur]=readCap(); [captions[capCur],captions[j]]=[captions[j],captions[capCur]]; capCur=j;
+  renderTabs(); draw();
 }
 function delCap(){
   if(captions.length<2) return;
@@ -495,40 +552,47 @@ function renderTabs(){
   const add=document.createElement("button");
   add.textContent="+"; add.title=`문구 추가 (현재 문구 설정을 복사, 최대 ${CAP_MAX}개)`;
   add.disabled=captions.length>=CAP_MAX; add.onclick=addCap; box.appendChild(add);
-  const del=document.createElement("button");
-  del.textContent="삭제"; del.className="capdel"; del.title="이 문구 삭제";
-  del.style.display=captions.length<2?"none":""; del.onclick=delCap; box.appendChild(del);
+  const rt=document.createElement("span"); rt.className="caprt"; rt.style.display=captions.length<2?"none":"";
+  const mk=(txt,title,fn,dis)=>{ const b=document.createElement("button"); b.textContent=txt; b.title=title; b.disabled=dis; b.onclick=fn; rt.appendChild(b); };
+  mk("◀","레이어 아래로 (번호가 작을수록 아래에 그려져요)",()=>moveCap(-1),capCur===0);
+  mk("▶","레이어 위로 (번호가 클수록 위에 그려져요)",()=>moveCap(1),capCur===captions.length-1);
+  mk("삭제","이 문구 삭제",delCap,false);
+  box.appendChild(rt);
 }
 // 자간 적용 텍스트 (letterSpacing 미지원 브라우저는 글자별로 직접 배치)
-function fillSpaced(text,x,y,sp,stroke){
-  if("letterSpacing" in ctx){
-    ctx.letterSpacing=sp+"px";
+function fillSpaced(g,text,x,y,sp,stroke){
+  if("letterSpacing" in g){
+    g.letterSpacing=sp+"px";
     const dx=sp/2; // 마지막 글자 뒤에도 자간이 붙어 가운데 정렬이 어긋나는 것을 보정
-    stroke?ctx.strokeText(text,x+dx,y):ctx.fillText(text,x+dx,y);
+    stroke?g.strokeText(text,x+dx,y):g.fillText(text,x+dx,y);
   } else {
-    const chars=[...text], ws=chars.map(ch=>ctx.measureText(ch).width);
+    const chars=[...text], ws=chars.map(ch=>g.measureText(ch).width);
     let cx=x-(ws.reduce((a,b)=>a+b,0)+sp*(chars.length-1))/2;
-    ctx.textAlign="left";
-    chars.forEach((ch,i)=>{ stroke?ctx.strokeText(ch,cx,y):ctx.fillText(ch,cx,y); cx+=ws[i]+sp; });
-    ctx.textAlign="center";
+    g.textAlign="left";
+    chars.forEach((ch,i)=>{ stroke?g.strokeText(ch,cx,y):g.fillText(ch,cx,y); cx+=ws[i]+sp; });
+    g.textAlign="center";
   }
 }
+let capLayer=null; // 문구를 임시 캔버스에 그린 뒤 투명도를 적용 (외곽선·채움이 겹쳐도 한 덩어리로 투명해짐)
 function drawCaption(c,w,h){
   const text=c.text.trim(); if(!text) return;
+  if(!capLayer||capLayer.width!==w||capLayer.height!==h){ capLayer=document.createElement("canvas"); capLayer.width=w; capLayer.height=h; }
+  const g=capLayer.getContext("2d"); g.clearRect(0,0,w,h);
   const size=c.size, by=size*.35;                       // by: 글자 시각적 중심 → 기준선 거리
   const cx=w/2+c.x/100*w, cy=h/2+c.y/100*h;             // 글자 중심 위치
-  ctx.save();
-  ctx.translate(cx,cy); ctx.scale(c.sx/100,c.sy/100);   // 중심 기준으로 가로/세로 늘이기
-  ctx.font=`${c.italic?"italic ":""}${c.bold?600:400} ${size}px ${CAPTION_FONTS[c.font]||CAPTION_FONTS.serif}`;
-  ctx.textAlign="center";
+  g.save();
+  g.translate(cx,cy); g.rotate(c.rot*Math.PI/180); g.scale(c.sx/100,c.sy/100);   // 중심 기준 회전 → 글자 방향으로 늘이기
+  g.font=`${c.italic?"italic ":""}${c.bold?600:400} ${size}px ${CAPTION_FONTS[c.font]||CAPTION_FONTS.serif}`;
+  g.textAlign="center";
   if(c.outline>0){
-    ctx.lineJoin="round"; ctx.lineWidth=c.outline*2; ctx.strokeStyle=c.outlineColor;
-    fillSpaced(text,0,by,c.spacing,true);
+    g.lineJoin="round"; g.lineWidth=c.outline*2; g.strokeStyle=c.outlineColor;
+    fillSpaced(g,text,0,by,c.spacing,true);
   }
-  ctx.fillStyle=hexA(c.color,.88);
-  ctx.shadowColor="rgba(255,255,255,.35)"; ctx.shadowBlur=2;
-  fillSpaced(text,0,by,c.spacing,false);
-  ctx.restore();
+  g.fillStyle=c.color;
+  g.shadowColor="rgba(255,255,255,.35)"; g.shadowBlur=2;
+  fillSpaced(g,text,0,by,c.spacing,false);
+  g.restore();
+  ctx.save(); ctx.globalAlpha=1-c.alpha/100; ctx.globalCompositeOperation=c.blend||"source-over"; ctx.drawImage(capLayer,0,0); ctx.restore();
 }
 
 function autoSize(image){
@@ -697,6 +761,38 @@ function filterStr(w,h){
   }
 }
 
+// 액자 외곽선. fixed: 여백 위치에 고정 / follow: 이미지와 함께 이동 / wrap: 고정된 액자 안에서 이미지가 보이는 부분만 둘러쌈
+function drawFrameLines(o){
+  const {w,h,margin,innerW,innerH,shape,style,mode,ox,oy,rot,dw,dh}=o;
+  const inset=Math.min(10,margin*.15);
+  const lines=[[0,"rgba(0,0,0,.14)"]];
+  if(style!=="round") lines.push([inset,"rgba(0,0,0,.08)"]);   // 바깥쪽 옅은 선은 톱니/컷 계열 스타일에서만
+  for(const [g,color] of lines){
+    const sh=g?outerShape(shape,g):shape;
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1;
+    if(mode==="follow"){
+      ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
+      framePath(ctx,-innerW/2-g+.5,-innerH/2-g+.5,innerW+2*g-1,innerH+2*g-1,sh); ctx.stroke();
+    } else if(mode==="wrap"){
+      const fx=margin-g+.5, fy=margin-g+.5, fw=w-2*(margin-g)-1, fh=h-2*(margin-g)-1;
+      ctx.save();                                   // 1) 액자 선 중 이미지가 있는 구간
+      ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
+      ctx.beginPath(); ctx.rect(-(dw/2+g),-(dh/2+g),dw+2*g,dh+2*g); ctx.clip();
+      ctx.setTransform(1,0,0,1,0,0);
+      framePath(ctx,fx,fy,fw,fh,sh); ctx.stroke();
+      ctx.restore();
+      ctx.save();                                   // 2) 이미지 가장자리 중 액자 안쪽 구간
+      framePath(ctx,fx,fy,fw,fh,sh); ctx.clip();
+      ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
+      ctx.strokeRect(-(dw/2+g),-(dh/2+g),dw+2*g,dh+2*g);
+      ctx.restore();
+    } else {
+      framePath(ctx,margin-g+.5,margin-g+.5,w-2*(margin-g)-1,h-2*(margin-g)-1,sh); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 let texImg=null;
 
 // 불러온 텍스처 이미지를 우표의 불투명한 부분에만 합성 (구멍/둥근 모서리 바깥은 투명 유지)
@@ -802,8 +898,11 @@ function draw(){
   ctx.fillStyle=paper;
   const gm=$("gradMode").value;
   if(gm!=="none"){
-    const g=gm==="h"?ctx.createLinearGradient(0,0,w,0):ctx.createLinearGradient(0,0,0,h);
-    g.addColorStop(0,paper);g.addColorStop(1,$("paperColor2").value);
+    // 각도: CSS와 같은 방식 (0°=위쪽, 90°=오른쪽, 180°=아래쪽). 캔버스 전체를 덮도록 중심 기준으로 선을 계산
+    const th=(+$("gradAngle").value)*Math.PI/180, dx=Math.sin(th), dy=-Math.cos(th), L=Math.abs(w*dx)+Math.abs(h*dy);
+    const g=ctx.createLinearGradient(w/2-dx*L/2,h/2-dy*L/2,w/2+dx*L/2,h/2+dy*L/2);
+    const cols=[paper,$("paperColor2").value,...gradExtra];
+    cols.forEach((c,i)=>g.addColorStop(i/(cols.length-1),c));
     ctx.fillStyle=g;
   }
   ctx.fillRect(0,0,w,h);
@@ -826,13 +925,10 @@ function draw(){
     ctx.restore();
     ctx.filter="none";
 
-    // 종이 여백과 이미지 사이에 아주 얇은 내부선
+    // 액자 외곽선(안쪽 얇은 선 + 바깥 옅은 선). 모드: fixed(고정) / follow(액자도 이동) / wrap(액자 안에서만 + 액자 유지)
     if(style!=="none" && $("frame").checked){
-      ctx.save();
-      ctx.strokeStyle="rgba(0,0,0,.14)";
-      ctx.lineWidth=1;
-      framePath(ctx,margin+.5,margin+.5,innerW-1,innerH-1,shape); ctx.stroke();
-      ctx.restore();
+      const lineMode=fixedFrame ? ($("frameWrap").checked?"wrap":"fixed") : ($("frameFollow").checked?"follow":"fixed");
+      drawFrameLines({w,h,margin,innerW,innerH,shape,style,mode:lineMode,ox:offsetX,oy:offsetY,rot:rotation*Math.PI/180,dw:iw*s2,dh:ih*s2});
     }
   }
 
@@ -841,14 +937,6 @@ function draw(){
     const step = (style==="classic" ? 18 : 25) * Math.max(1,pk);
     if(style==="classic"||style==="clean") drawPerforatedRect(0,0,w,h,border,step,5.2*pk);
     else drawEdgeStyle(style,w,h,pk);
-    if(img && $("frame").checked){
-      const inset = Math.min(10, margin*.15);
-      ctx.save();
-      ctx.strokeStyle = "rgba(0,0,0,.08)";
-      ctx.lineWidth = 1;
-      framePath(ctx,margin-inset+.5,margin-inset+.5,w-2*(margin-inset)-1,h-2*(margin-inset)-1,outerShape(shape,inset)); ctx.stroke();
-      ctx.restore();
-    }
   } else if(style==="round"){
     ctx.save();
     const R=Math.min(+$("edgeCut").value,w/2,h/2), lw=EDGE_LW, rc=Math.max(0,R-lw/2);
@@ -918,12 +1006,29 @@ $("fontFile").onchange=async e=>{
 $("edgeCut").oninput=e=>{setText("edgeCutVal",`${e.target.value}px`);draw()};
 $("cornerSize").oninput=e=>{setText("cornerSizeVal",`${e.target.value} px`);draw()};
 $("filterAmt").oninput=e=>{setText("filterAmtVal",`${e.target.value}%`);draw()};
+let gradExtra=[]; // 세 번째 이후 그라데이션 색 (최대 3개 → 총 5색)
+function renderGradChips(){
+  const box=$("gxChips"); box.innerHTML="";
+  gradExtra.forEach((c,i)=>{
+    const el=document.createElement("input"); el.type="color"; el.className="chip"; el.value=c; el.title=`${i+3}번째 색`;
+    el.oninput=()=>{ gradExtra[i]=el.value; draw(); };
+    box.appendChild(el);
+  });
+  $("gxAdd").disabled=gradExtra.length>=3; $("gxDel").disabled=gradExtra.length===0;
+}
+$("gxAdd").onclick=()=>{ if(gradExtra.length>=3) return; gradExtra.push(gradExtra.length?gradExtra[gradExtra.length-1]:$("paperColor2").value); renderGradChips(); draw(); };
+$("gxDel").onclick=()=>{ gradExtra.pop(); renderGradChips(); draw(); };
+$("gradAngle").oninput=e=>{setText("gradAngleVal",`${e.target.value}°`);draw()};
+function syncFrameOpts(){ const a=$("limitMove").checked; $("frameWrap").disabled=!a; $("frameFollow").disabled=a; }
+$("limitMove").addEventListener("input",syncFrameOpts);
+$("capRot").oninput=e=>{setText("capRotVal",`${e.target.value}°`);draw()};
+$("capAlpha").oninput=e=>{setText("capAlphaVal",`${e.target.value}%`);draw()};
 $("capSpacing").oninput=e=>{setText("capSpacingVal",`${e.target.value} px`);draw()};
 $("capScaleX").oninput=e=>{setText("capScaleXVal",`${e.target.value}%`);draw()};
 $("capScaleY").oninput=e=>{setText("capScaleYVal",`${e.target.value}%`);draw()};
 $("fontSize").oninput=e=>{setText("fontVal",`${e.target.value} px`);draw()};
 $("texture").oninput=e=>{setText("textureVal",`${e.target.value}%`);draw()};
-["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor","limitMove","filterType","cornerStyle","cnTL","cnTR","cnBL","cnBR","capBold","capItalic"].forEach(id=>$(id).addEventListener("input",draw));
+["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor","limitMove","filterType","cornerStyle","cnTL","cnTR","cnBL","cnBR","capBold","capItalic","frameWrap","frameFollow","capBlend"].forEach(id=>$(id).addEventListener("input",draw));
 
 function setTheme(m){
   document.documentElement.dataset.theme=m;
@@ -935,7 +1040,10 @@ $("themeBtn").onclick=()=>{
 };
 
 $("textureStyle").addEventListener("input",()=>$("texCustom").classList.toggle("hidden",$("textureStyle").value!=="custom"));
-$("gradMode").addEventListener("input",()=>$("paperColor2").classList.toggle("hidden",$("gradMode").value==="none"));
+$("gradMode").addEventListener("input",()=>{
+  const on=$("gradMode").value!=="none";
+  $("paperColor2").classList.toggle("hidden",!on); $("gradMore").classList.toggle("hidden",!on);
+});
 $("borderStyle").addEventListener("input",()=>{
   const v=$("borderStyle").value;
   $("borderColorField").classList.toggle("hidden",v!=="round");
@@ -1051,13 +1159,13 @@ window.addEventListener("load",()=>{
 // ---- 설정 저장(localStorage) / 설정 초기화 ----
 // 이미지·불러온 폰트/텍스처 파일은 저장하지 않고, 이미지에 종속된 값(확대·회전·이동)도 저장하지 않음.
 const SETTINGS_KEY="stampAtelier.settings.v1";
-const SKIP_IDS=new Set(["scale","rotation","imgX","imgY","caption","captionFont","captionColor","fontSize","capBold","capItalic","capSpacing","capScaleX","capScaleY","captionX","captionY","captionOutline","captionOutlineColor"]); // 문구 입력칸은 captions 배열로 따로 저장
+const SKIP_IDS=new Set(["scale","rotation","imgX","imgY","caption","captionFont","captionColor","fontSize","capBold","capItalic","capSpacing","capScaleX","capScaleY","captionX","captionY","captionOutline","captionOutlineColor","capRot","capAlpha","capBlend"]); // 문구 입력칸은 captions 배열로 따로 저장
 const settingEls=()=>[...document.querySelectorAll("aside input, aside select")]
   .filter(el=>el.id && el.type!=="file" && !SKIP_IDS.has(el.id));
 function collectSettings(){
   const o={theme:document.documentElement.dataset.theme==="light"?"light":"dark"};
   for(const el of settingEls()) o[el.id]=el.type==="checkbox"?el.checked:el.value;
-  captions[capCur]=readCap(); o.captions=captions; o.capCur=capCur;
+  captions[capCur]=readCap(); o.captions=captions; o.capCur=capCur; o.gradExtra=[...gradExtra];
   return o;
 }
 // HTML에 적힌 기본값 (브라우저의 폼 값 복원과 무관하게 항상 같은 값)
@@ -1068,10 +1176,13 @@ function defaultSettings(){
     else if(el.tagName==="SELECT") o[el.id]=([...el.options].find(op=>op.defaultSelected)||el.options[0]).value;
     else o[el.id]=el.defaultValue;
   }
-  o.captions=[capDefault()]; o.capCur=0;
+  o.captions=[capDefault()]; o.capCur=0; o.gradExtra=[];
   return o;
 }
 function applySettings(o){
+  o={...o};
+  if(o.gradMode==="h"){ o.gradMode="lin"; o.gradAngle=90; }        // 이전 버전: 좌→우
+  else if(o.gradMode==="v"){ o.gradMode="lin"; o.gradAngle=180; }  // 이전 버전: 상→하
   for(const el of settingEls()){
     if(!(el.id in o)) continue;
     if(el.type==="checkbox") el.checked=!!o[el.id];
@@ -1091,6 +1202,8 @@ function applySettings(o){
     capCur=Math.min(Math.max(+o.capCur||0,0),captions.length-1);
     writeCap(captions[capCur]); renderTabs();
   }
+  if(Array.isArray(o.gradExtra)){ gradExtra=o.gradExtra.filter(c=>/^#[0-9a-f]{6}$/i.test(c)).slice(0,3); renderGradChips(); }
+  syncFrameOpts();
   setTheme(o.theme==="light"?"light":"dark");
   prevFont=$("captionFont").value;
 }
@@ -1155,6 +1268,8 @@ window.addEventListener("load",async()=>{
 });
 
 renderTabs();
+renderGradChips();
+syncFrameOpts();
 draw();
 </script>
 </body>
