@@ -305,43 +305,6 @@ canvas{
       </div>
     </div>
   </div>
-
-  <div class="section" id="textureSection">
-    <h3>종이 질감</h3>
-    <div class="field">
-      <label>질감 종류</label>
-      <select id="textureStyle">
-        <option value="none">없음</option>
-        <option value="dot" selected>기본 (점)</option>
-        <option value="fiber">섬유</option>
-        <option value="laid">줄무늬 (레이드지)</option>
-        <option value="canvas">캔버스 (직조)</option>
-        <option value="stain">얼룩 (빈티지)</option>
-        <option value="grain">필름 입자</option>
-        <option value="custom">내 이미지…</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>종이 질감 <span id="textureVal">12%</span></label>
-      <input id="texture" type="range" min="0" max="100" value="12">
-    </div>
-    <div id="texCustom" class="hidden">
-      <div class="field">
-        <label>텍스처</label>
-        <button id="texBtn">이미지 불러오기</button>
-      </div>
-      <div class="field">
-        <label>배치</label>
-        <select id="texFit"><option value="cover">채우기</option><option value="tile">반복 (타일)</option></select>
-      </div>
-      <div class="field">
-        <label>섞기</label>
-        <select id="texBlend"><option value="multiply">곱하기</option><option value="overlay">오버레이</option><option value="source-over">일반</option></select>
-      </div>
-      <input id="texFile" class="hidden" type="file" accept="image/*">
-      <div id="texName" class="hint">강도는 위의 "종이 질감" 슬라이더로 조절해요</div>
-    </div>
-  </div>
 </div>
 
 <div class="col">
@@ -392,7 +355,42 @@ canvas{
     </div>
   </div>
 
-
+  <div class="section" id="textureSection">
+    <h3>종이 질감</h3>
+    <div class="field">
+      <label>질감 종류</label>
+      <select id="textureStyle">
+        <option value="none">없음</option>
+        <option value="dot" selected>기본 (점)</option>
+        <option value="fiber">섬유</option>
+        <option value="laid">줄무늬 (레이드지)</option>
+        <option value="canvas">캔버스 (직조)</option>
+        <option value="stain">얼룩 (빈티지)</option>
+        <option value="grain">필름 입자</option>
+        <option value="custom">내 이미지…</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>종이 질감 <span id="textureVal">12%</span></label>
+      <input id="texture" type="range" min="0" max="100" value="12">
+    </div>
+    <div id="texCustom" class="hidden">
+      <div class="field">
+        <label>텍스처</label>
+        <button id="texBtn">이미지 불러오기</button>
+      </div>
+      <div class="field">
+        <label>배치</label>
+        <select id="texFit"><option value="cover">채우기</option><option value="tile">반복 (타일)</option></select>
+      </div>
+      <div class="field">
+        <label>섞기</label>
+        <select id="texBlend"><option value="multiply">곱하기</option><option value="overlay">오버레이</option><option value="source-over">일반</option></select>
+      </div>
+      <input id="texFile" class="hidden" type="file" accept="image/*">
+      <div id="texName" class="hint">강도는 위의 "종이 질감" 슬라이더로 조절해요</div>
+    </div>
+  </div>
 
   <div class="section collapsible" id="captionSection">
     <h3>문구</h3>
@@ -1265,11 +1263,44 @@ function resetSticker(){if(stickerCur<0)return;stickerCommit();stickerHist[stick
 $('stickerUndo').onclick=undoSticker;$('stickerReset').onclick=resetSticker;$('stickerCenter').onclick=()=>{if(stickerCur<0)return;stickers[stickerCur].x=0;stickers[stickerCur].y=0;writeSticker(stickers[stickerCur]);draw();stickerCommit()};
 $('stickerDelete').onclick=()=>{if(stickerCur<0)return;stickers.splice(stickerCur,1);stickerHist.splice(stickerCur,1);stickerCommitted.splice(stickerCur,1);stickerCur=Math.min(stickerCur,stickers.length-1);if(stickerCur>=0)writeSticker(stickers[stickerCur]);renderStickerTabs();draw()};
 ['stickerVisible','stickerScale','stickerRot','stickerAlpha','stickerX','stickerY','stickerBorder','stickerBorderColor'].forEach(id=>{$(id).addEventListener('input',()=>{if(stickerCur<0)return;stickers[stickerCur]={...stickers[stickerCur],...readSticker()};setText('stickerScaleVal',`${$('stickerScale').value}%`);setText('stickerRotVal',`${$('stickerRot').value}°`);setText('stickerAlphaVal',`${$('stickerAlpha').value}%`);setText('stickerXVal',`${$('stickerX').value}%`);setText('stickerYVal',`${$('stickerY').value}%`);setText('stickerBorderVal',`${$('stickerBorder').value} px`);draw()});$(id).addEventListener('change',stickerCommit)});
+const stickerOutlineCache=new WeakMap();
+function getStickerOutline(st,bw,bh,b,color){
+  if(!st.img||b<=0)return null;
+  const iw=Math.max(1,Math.round(bw)), ih=Math.max(1,Math.round(bh)), bp=Math.max(1,Math.ceil(b));
+  const key=`${iw}x${ih}|${bp}|${color||'#fff'}`;
+  let cache=stickerOutlineCache.get(st.img);
+  if(!cache){cache=new Map();stickerOutlineCache.set(st.img,cache)}
+  if(cache.has(key))return cache.get(key);
+
+  const pad=bp+2, sw=iw+pad*2, sh=ih+pad*2;
+  const mask=document.createElement('canvas');mask.width=sw;mask.height=sh;
+  const mg=mask.getContext('2d');
+  mg.drawImage(st.img,pad,pad,iw,ih);
+
+  const out=document.createElement('canvas');out.width=sw;out.height=sh;
+  const og=out.getContext('2d');
+  const radius=bp;
+  const samples=Math.min(72,Math.max(16,Math.ceil(Math.PI*radius)));
+  for(let i=0;i<samples;i++){
+    const a=(i/samples)*Math.PI*2;
+    og.drawImage(mask,Math.cos(a)*radius,Math.sin(a)*radius);
+  }
+  og.globalCompositeOperation='source-in';
+  og.fillStyle=color||'#fff';og.fillRect(0,0,sw,sh);
+  og.globalCompositeOperation='source-over';
+
+  cache.set(key,out);
+  while(cache.size>20){cache.delete(cache.keys().next().value)}
+  return out;
+}
 function drawSticker(st,w,h){
   if(!st.visible||!st.img)return;
   const bw=st.baseW*st.scale/100,bh=st.baseH*st.scale/100,cx=w/2+st.x/100*w,cy=h/2+st.y/100*h,r=st.rot*Math.PI/180,b=st.border;
   ctx.save();ctx.translate(cx,cy);ctx.rotate(r);ctx.globalAlpha=st.alpha/100;
-  if(b>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.16)';ctx.shadowBlur=Math.max(2,b*.6);ctx.fillStyle=st.borderColor||'#fff';ctx.beginPath();ctx.roundRect(-bw/2-b,-bh/2-b,bw+2*b,bh+2*b,Math.min(18,b));ctx.fill();ctx.restore()}
+  if(b>0){
+    const outline=getStickerOutline(st,bw,bh,b,st.borderColor||'#fff');
+    if(outline){ctx.drawImage(outline,-outline.width/2,-outline.height/2)}
+  }
   ctx.drawImage(st.img,-bw/2,-bh/2,bw,bh);ctx.restore();
 }
 
@@ -1326,7 +1357,7 @@ function render(){
     ctx.restore();
     ctx.filter="none";
 
-    // 액자 외곽선(안쪽 얇은 선 + 바깥 옅은 선). 모드: fixed(고정) / follow(액자도 이동) / wrap(액자 안에서만 + 액자 유지)
+    // 액자 외곽선은 스티커보다 먼저 그려서 스티커와 스티커 테두리가 그 위에 올라오게 합니다.
     if(style!=="none" && $("frame").checked){
       const lineMode=fixedFrame ? ($("frameWrap").checked?"wrap":"fixed") : ($("frameFollow").checked?"follow":"fixed");
       drawFrameLines({w,h,margin,innerW,innerH,shape,style,mode:lineMode,ox:offsetX,oy:offsetY,rot:rotation*Math.PI/180,dw:iw*s2,dh:ih*s2});
