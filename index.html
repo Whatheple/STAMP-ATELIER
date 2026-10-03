@@ -49,7 +49,25 @@ aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;d
   margin:0 0 3px;color:var(--h3);font-size:11px;
   letter-spacing:.1em;text-transform:uppercase
 }
-.field{margin:3px 0;display:grid;grid-template-columns:104px 1fr;gap:8px;align-items:center}
+.section.collapsible h3{
+  cursor:pointer;
+  user-select:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:0;
+}
+.section.collapsible h3::after{
+  content:"⌄";
+  font-size:13px;
+  line-height:1;
+  color:var(--muted);
+  transition:transform .12s ease;
+}
+.section.collapsible.collapsed h3::after{transform:rotate(-90deg)}
+.section.collapsible.collapsed > :not(h3){display:none}
+.section.collapsible:not(.collapsed) h3{margin-bottom:3px}
+.field{margin:3px 0;display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center}
 .field>label{line-height:1.2;display:flex;justify-content:space-between;align-items:center;margin:0;color:var(--label);white-space:nowrap}
 .field>label span{color:var(--accent);font-size:12px}
 .field>label.chk{justify-content:flex-start;gap:6px;color:var(--chk)}
@@ -76,14 +94,22 @@ button:disabled:hover{background:var(--btn)}
 .captabs{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .captabs button{padding:4px 6px;min-width:28px}
 .captabs button.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
-.captabs .caprt{margin-left:auto;display:flex;gap:4px}
+.captabs .caprt{margin-left:auto;display:flex;gap:4px}.captabs .muted{align-self:center}
 .captabs .caprt button{font-size:12px;padding:4px 7px;min-width:0}
-input.chip{width:30px;height:28px}
+.pair input.chip,#gxChips input.chip{width:26px;height:28px}
+.val{display:inline-flex;align-items:center}
+.val .numin{width:36px;height:18px;padding:0 2px;font-size:12px;text-align:right;color:var(--accent);background:transparent;border:1px solid transparent;border-radius:4px;-moz-appearance:textfield}
+.val .numin:hover{border-color:var(--input-line)}
+.val .numin:focus{background:var(--input);border-color:var(--accent);outline:none}
+.val .numin::-webkit-outer-spin-button,.val .numin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.val em{font-style:normal;font-size:12px;margin-left:1px}
 #gxChips{display:flex;gap:4px}
 .pair>button{padding:3px 8px;flex:none}
 .chkwrap{display:flex;flex-wrap:wrap;gap:3px 8px}
 .chkwrap>label{display:flex;align-items:center;gap:4px;color:var(--chk);white-space:nowrap;font-size:13px}
 .chkwrap>label:has(input:disabled){opacity:.45}
+.borderSides{gap:2px 9px}
+.borderSides>label{font-size:12px}
 .pair.corners{gap:4px}
 .pair.corners input{margin:0}
 .pair>label{display:flex;align-items:center;gap:3px;color:var(--chk);white-space:nowrap}
@@ -125,6 +151,17 @@ canvas{
   main{height:auto;display:block}.preview{height:68vh;min-height:460px}
   aside{border-right:0;border-top:1px solid var(--line);grid-template-columns:1fr}.col+.col{border-left:0}
 }
+
+/* 사용 안내 투어 */
+.guideTour{position:fixed;inset:0;z-index:1000}
+.guideShade{position:fixed;background:rgba(0,0,0,.50);pointer-events:auto}
+.guideTip{position:fixed;z-index:1002;width:min(410px,calc(100vw - 28px));background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 45px rgba(0,0,0,.45);padding:17px}
+.guideStepCount{font-size:11px;color:var(--muted);margin-bottom:5px}
+.guideJump{height:34px;min-width:132px;border:1px solid var(--input-line);background:var(--input);color:var(--text);border-radius:7px;padding:0 9px;font:inherit}
+.guideTip h2{font-size:17px;margin:0 0 8px;color:var(--text)}
+.guideTip p{margin:0;color:var(--label);font-size:13px;line-height:1.55}
+.guideNav{display:flex;gap:7px;align-items:center;justify-content:flex-end;margin-top:15px}.guideNav .guideJump{flex:1 1 auto;min-width:0}.guideNav #guideClose{flex:0 0 auto;white-space:nowrap;min-width:58px}
+.guideFocus{position:relative;z-index:1001;box-shadow:0 0 0 3px var(--accent),0 0 0 7px rgba(216,194,143,.25)!important;border-radius:8px!important}
 </style>
 </head>
 <body>
@@ -132,7 +169,7 @@ canvas{
   <div class="logo">✉ STAMP ATELIER</div>
   <div class="muted">single image stamp maker</div>
   <div class="spacer"></div>
-  <div class="sizebox" title="저장할 PNG 크기 (비율 유지)">
+  <div class="sizebox" id="saveSizeGroup" title="저장할 PNG 크기 (비율 유지)">
     <span class="muted">저장 크기</span>
     <input id="outW" type="number" min="1" max="8000" value="800">
     <span class="muted">×</span>
@@ -149,7 +186,7 @@ canvas{
 <main>
 <aside>
 <div class="col">
-  <div class="section">
+  <div class="section" id="imageSection">
     <h3>이미지</h3>
     <div id="drop" class="drop">
       <div>＋ 이미지를 불러오세요</div>
@@ -159,7 +196,7 @@ canvas{
     <div id="fileName" class="hint"></div>
   </div>
 
-  <div class="section">
+  <div class="section" id="adjustSection">
     <h3>이미지 조정</h3>
     <div class="field">
       <label>확대 <span id="scaleVal">100%</span></label>
@@ -192,7 +229,7 @@ canvas{
     <div class="btns"><button id="undoBtn" disabled>↶ 되돌리기</button><button id="centerBtn">중앙으로</button><button id="adjResetBtn">초기화</button></div>
   </div>
 
-  <div class="section">
+  <div class="section" id="filterSection">
     <h3>이미지 필터</h3>
     <div class="field">
       <label>필터</label>
@@ -215,7 +252,7 @@ canvas{
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="cornerSection">
     <h3>이미지 모서리</h3>
     <div class="field">
       <label>모양</label>
@@ -240,7 +277,7 @@ canvas{
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="marginSection">
     <h3>여백 색상</h3>
     <div class="field">
       <label>색상 · 방식</label>
@@ -268,48 +305,8 @@ canvas{
       </div>
     </div>
   </div>
-</div>
 
-<div class="col">
-  <div class="section">
-    <h3>우표 테두리</h3>
-    <div class="field">
-      <label>테두리 스타일</label>
-      <select id="borderStyle">
-        <option value="classic">클래식 톱니</option>
-        <option value="clean">얇은 톱니</option>
-        <option value="square">사각 톱니</option>
-        <option value="zigzag">삼각 톱니</option>
-        <option value="scallop">물결</option>
-        <option value="ticket">티켓 노치</option>
-        <option value="bevel">사선 모서리</option>
-        <option value="round">둥근 모서리</option>
-        <option value="none">없음</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>톱니 크기 <span id="perfVal">100%</span></label>
-      <input id="perf" type="range" min="50" max="800" value="100">
-    </div>
-    <div class="field">
-      <label>여백 <span id="marginVal">46 px</span></label>
-      <input id="margin" type="range" min="0" max="120" value="46">
-    </div>
-    <div id="edgeCutField" class="field hidden">
-      <label>깎는 크기 <span id="edgeCutVal">28px</span></label>
-      <input id="edgeCut" type="range" min="0" max="120" value="28">
-    </div>
-    <div id="borderColorField" class="field hidden">
-      <label>테두리 색상</label>
-      <div class="inline"><input id="borderColor" type="color" value="#f8f5ec"><span class="muted">둥근 테두리선 색</span></div>
-    </div>
-    <div class="field">
-      <label for="frame">이미지 테두리</label>
-      <label class="chk"><input id="frame" type="checkbox" checked> 액자 외곽선 표시</label>
-    </div>
-  </div>
-
-  <div class="section">
+  <div class="section" id="textureSection">
     <h3>종이 질감</h3>
     <div class="field">
       <label>질감 종류</label>
@@ -345,8 +342,59 @@ canvas{
       <div id="texName" class="hint">강도는 위의 "종이 질감" 슬라이더로 조절해요</div>
     </div>
   </div>
+</div>
 
-  <div class="section">
+<div class="col">
+  <div class="section" id="borderSection">
+    <h3>우표 테두리</h3>
+    <div class="field">
+      <label>테두리 스타일</label>
+      <select id="borderStyle">
+        <option value="classic">클래식 톱니</option>
+        <option value="clean">얇은 톱니</option>
+        <option value="square">사각 톱니</option>
+        <option value="zigzag">삼각 톱니</option>
+        <option value="scallop">물결</option>
+        <option value="ticket">티켓 노치</option>
+        <option value="bevel">사선 모서리</option>
+        <option value="round">둥근 모서리</option>
+        <option value="none">없음</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>테두리 방향</label>
+      <div class="chkwrap borderSides">
+        <label><input id="borderTop" type="checkbox" checked> 상</label>
+        <label><input id="borderBottom" type="checkbox" checked> 하</label>
+        <label><input id="borderLeft" type="checkbox" checked> 좌</label>
+        <label><input id="borderRight" type="checkbox" checked> 우</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>톱니 크기 <span id="perfVal">100%</span></label>
+      <input id="perf" type="range" min="50" max="800" value="100">
+    </div>
+    <div class="field">
+      <label>여백 <span id="marginVal">46 px</span></label>
+      <input id="margin" type="range" min="0" max="120" value="46">
+    </div>
+    <div id="edgeCutField" class="field hidden">
+      <label>깎는 크기 <span id="edgeCutVal">28px</span></label>
+      <input id="edgeCut" type="range" min="0" max="120" value="28">
+    </div>
+    <div id="borderColorField" class="field hidden">
+      <label>테두리 색상</label>
+      <div class="inline"><input id="borderColor" type="color" value="#f8f5ec"><span class="muted">둥근 테두리선 색</span></div>
+    </div>
+    <div class="field">
+      <label for="frame">이미지 테두리</label>
+      <label class="chk"><input id="frame" type="checkbox" checked> 액자 외곽선 표시</label>
+    </div>
+  </div>
+
+
+
+  <div class="section collapsible" id="captionSection">
     <h3>문구</h3>
     <div class="captabs" id="capTabs"></div>
     <div class="field"><input id="caption" type="text" placeholder="예: KOREA · 2026"></div>
@@ -429,7 +477,31 @@ canvas{
         <input id="captionOutlineColor" type="color" value="#ffffff" title="외곽선 색">
       </div>
     </div>
+    <div class="btns">
+      <button id="capUndo" disabled>↶ 되돌리기</button>
+      <button id="capReset">초기화</button>
+      <button id="capDelete" disabled>삭제</button>
+    </div>
   </div>
+
+  <div class="section collapsible" id="stickerSection">
+    <h3>이미지 스티커</h3>
+    <div id="stickerDrop" class="drop">＋ 스티커 이미지 추가<br><span class="hint">여러 장 추가 가능 · 최대 5개</span></div>
+    <input id="stickerFile" class="hidden" type="file" accept="image/*" multiple>
+    <div class="captabs" id="stickerTabs"></div>
+    <div id="stickerControls" class="hidden">
+      <div class="field"><label>표시</label><label class="chk"><input id="stickerVisible" type="checkbox" checked> 보이기</label></div>
+      <div class="field"><label>크기 <span id="stickerScaleVal">100%</span></label><input id="stickerScale" type="range" min="10" max="300" value="100"></div>
+      <div class="field"><label>회전 <span id="stickerRotVal">0°</span></label><input id="stickerRot" type="range" min="-180" max="180" value="0"></div>
+      <div class="field"><label>투명도 <span id="stickerAlphaVal">100%</span></label><input id="stickerAlpha" type="range" min="0" max="100" value="100"></div>
+      <div class="field"><label>가로 이동 <span id="stickerXVal">0%</span></label><input id="stickerX" type="range" min="-50" max="50" step="0.5" value="0"></div>
+      <div class="field"><label>세로 이동 <span id="stickerYVal">0%</span></label><input id="stickerY" type="range" min="-50" max="50" step="0.5" value="0"></div>
+      <div class="field"><label>테두리 <span id="stickerBorderVal">0 px</span></label><input id="stickerBorder" type="range" min="0" max="40" value="0"></div>
+      <div class="field"><label>테두리 색</label><input id="stickerBorderColor" type="color" value="#ffffff"></div>
+      <div class="btns"><button id="stickerUndo" disabled>↶ 되돌리기</button><button id="stickerCenter">중앙으로</button><button id="stickerReset">초기화</button><button id="stickerDelete">삭제</button></div>
+    </div>
+  </div>
+
 </div>
 </aside>
 
@@ -438,55 +510,174 @@ canvas{
 </section>
 </main>
 
-<div id="guide" class="modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
-  <div class="dialog">
-    <h2 id="guideTitle">✉ STAMP ATELIER 사용 안내</h2>
-    <div class="body">
-      <h4>시작하기</h4>
-      <ul>
-        <li>왼쪽 위 "이미지"를 클릭하거나 사진을 끌어다 놓아 한 장을 불러오세요. 우표 크기는 이미지 비율에 맞춰 자동으로 정해져요.</li>
-      </ul>
-      <h4>이미지 다루기</h4>
-      <ul>
-        <li>미리보기에서 이미지를 드래그하면 위치가 옮겨져요. 확대·회전·밝기·가로/세로 이동은 "이미지 조정"에서 조절하고, "되돌리기", "중앙으로", "초기화"로 되돌릴 수 있어요.</li>
-        <li>"이동 제한 – 액자 안에서만"을 켜면 액자 틀 밖으로 나간 이미지 부분이 보이지 않고, "액자 유지"를 같이 켜면 보이는 이미지만큼만 액자 테두리선이 둘러져요. "액자도 이동"은 "액자 안에서만"이 꺼져 있을 때 이미지와 함께 액자 테두리선도 움직여요.</li>
-        <li>"이미지 모서리"에서 둥글게 / 사선 컷 / 안쪽 둥글게와 크기, 적용할 모서리를 고르고, "이미지 필터"로 분위기를 바꿔 보세요.</li>
-      </ul>
-      <h4>우표 꾸미기</h4>
-      <ul>
-        <li>"우표 테두리": 톱니·물결 등 스타일, 톱니 크기, 여백, 액자 외곽선(이미지 테두리) 표시를 정해요. 둥근·사선 모서리는 "모서리 깎기"로 깎는 크기를 조절해요.</li>
-        <li>"종이 질감": 질감 종류와 강도를 고르고, "내 이미지…"로 원하는 질감 이미지를 불러올 수 있어요.</li>
-        <li>"여백 색상": 단색 또는 그라데이션(각도 조절, 색상은 ＋로 최대 5개까지)을 쓸 수 있어요.</li>
-        <li>"문구": 글자, 글꼴("＋ 폰트 불러오기…"로 내 폰트 추가), 색, 굵게/기울임, 크기, 자간, 가로/세로 비율, 회전, 투명도, 혼합(곱하기·오버레이 등), 위치, 외곽선을 정해요. 문구가 여러 개면 ◀ ▶로 레이어 순서(번호가 클수록 위)를 바꿀 수 있어요. 문구 번호 옆 "+"를 누르면 지금 문구의 설정을 복사해 새 문구를 만들어요. (최대 4개)</li>
-      </ul>
-      <h4>저장하기</h4>
-      <ul>
-        <li>헤더의 "저장 크기"에 너비나 높이를 입력하면 비율에 맞춰 나머지가 자동 계산돼요. (최대 8000px)</li>
-        <li>"PNG 저장"(Ctrl+S)을 누르면 톱니 구멍과 모서리 바깥이 투명한 PNG로 저장돼요.</li>
-        <li>🌙/☀ 버튼으로 라이트·다크 화면을 바꿀 수 있어요. 투명한 부분은 화면 배경이 비쳐 보이는 것으로 확인할 수 있고, 저장되는 PNG에는 영향이 없어요.</li>
-      </ul>
-      <h4>설정</h4>
-      <ul>
-        <li>설정은 이 브라우저에 자동으로 저장돼요. 불러온 폰트·텍스처 파일도 저장되지만 우표에 올린 이미지는 저장되지 않아요.</li>
-        <li>"설정 초기화"는 모든 설정과 저장된 폰트·텍스처를 지우고, "새로 만들기"는 이미지와 문구를 비워요.</li>
-      </ul>
-    </div>
-    <div class="foot">
-      <span class="made">이 사이트는 바이브코딩으로 제작되었습니다.</span>
-      <button id="guideClose" class="primary">닫기</button>
+<div id="guide" class="guideTour" hidden aria-hidden="true">
+  <div class="guideShade" id="guideShadeTop"></div>
+  <div class="guideShade" id="guideShadeRight"></div>
+  <div class="guideShade" id="guideShadeBottom"></div>
+  <div class="guideShade" id="guideShadeLeft"></div>
+  <div class="guideTip" id="guideTip" role="dialog" aria-modal="true" aria-labelledby="guideStepTitle">
+    <div class="guideStepCount" id="guideStepCount"></div>
+    <h2 id="guideStepTitle"></h2>
+    <div id="guideStepBody"></div>
+    <div class="guideNav">
+      <select class="guideJump" id="guideJump" aria-label="안내 항목 선택"></select>
+      <button id="guideClose">종료</button>
     </div>
   </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+
+
+// ---- 사용 안내: 실제 UI를 하나씩 강조하는 투어 ----
+const GUIDE_STEPS=[
+  {sel:'#saveSizeGroup',title:'저장 크기',body:'저장할 PNG의 너비와 높이를 정합니다. 한쪽 값을 바꾸면 이미지 비율에 맞춰 다른 쪽도 자동으로 계산됩니다. 최대 8000px까지 사용할 수 있어요.',side:'bottom'},
+  {sel:'#guideBtn',title:'사용 안내',body:'필요할 때 이 안내를 다시 열 수 있습니다. 아래 선택 메뉴에서 원하는 기능으로 곧바로 이동할 수도 있어요.',side:'bottom'},
+  {sel:'#themeBtn',title:'화면 테마',body:'라이트/다크 화면을 전환합니다. 이 설정은 작업 결과물의 PNG 색상이나 투명도에는 영향을 주지 않아요.',side:'bottom'},
+  {sel:'#settingsResetBtn',title:'설정 초기화',body:'저장된 설정과 불러온 폰트·텍스처 파일을 지우고 기본 설정으로 되돌립니다. 우표에 올린 이미지 자체를 지우는 기능은 아닙니다.',side:'bottom'},
+  {sel:'#resetBtn',title:'새로 만들기',body:'현재 불러온 이미지와 꾸미기 요소를 비우고 새 작업을 시작합니다.',side:'bottom'},
+  {sel:'#saveBtn',title:'PNG 저장',body:'현재 미리보기 결과를 PNG 파일로 저장합니다. 위에서 지정한 저장 크기로 출력됩니다.',side:'bottom'},
+  {sel:'#imageSection',title:'이미지',body:'사용할 원본 이미지를 한 장 불러오는 곳입니다. 이미지를 끌어다 놓는 것도 가능합니다.',side:'right'},
+  {sel:'#adjustSection',title:'이미지 조정',body:'원본 이미지의 확대·축소, 회전, 밝기, 위치 등을 조절합니다. 되돌리기·중앙으로·초기화도 여기에서 사용할 수 있어요.',side:'right'},
+  {sel:'#filterSection',title:'이미지 필터',body:'원본 이미지의 분위기와 색감을 조절하는 필터 메뉴입니다.',side:'right'},
+  {sel:'#cornerSection',title:'이미지 모서리',body:'이미지 모서리 모양과 크기를 조절합니다. 둥글게, 사선 컷, 안쪽 둥글게 등의 형태를 선택할 수 있어요.',side:'right'},
+  {sel:'#marginSection',title:'여백 색상',body:'이미지 주변 여백의 색상을 설정합니다. 단색이나 여러 색을 이용한 그라데이션을 사용할 수 있어요.',side:'right'},
+  {sel:'#borderSection',title:'우표 테두리',body:'우표의 톱니·물결 같은 테두리 스타일과 톱니 크기, 여백, 외곽선 등을 설정합니다. 테두리 방향에서 상·하·좌·우를 개별적으로 끌 수도 있어요.',side:'right'},
+  {sel:'#textureSection',title:'종이 질감',body:'우표에 적용할 종이 질감의 종류와 강도를 설정합니다. 원하는 질감 이미지를 직접 불러올 수도 있어요.',side:'right'},
+  {sel:'#captionSection',title:'문구',body:'문구를 추가하고 글꼴, 색, 크기, 자간, 비율, 회전, 투명도, 위치, 외곽선 등을 조절합니다. 최대 4개의 문구 레이어를 사용할 수 있으며, 제목을 눌러 메뉴를 접을 수도 있어요.',side:'right'},
+  {sel:'#stickerSection',title:'이미지 스티커',body:'별도의 이미지 스티커를 최대 5장 추가할 수 있습니다. 스티커마다 크기, 회전, 투명도, 위치와 테두리를 따로 조절할 수 있어요. 이 메뉴 역시 제목을 눌러 접을 수 있습니다.',side:'right'}
+];
+let guideIndex=0, guidePrevFocus=null, guideCollapsedState={};
+function guideTarget(step){return document.querySelector(step.sel)}
+function guideClearFocus(){document.querySelectorAll('.guideFocus').forEach(e=>e.classList.remove('guideFocus'));}
+function guideSetShades(r){
+  const top=$('guideShadeTop'),right=$('guideShadeRight'),bottom=$('guideShadeBottom'),left=$('guideShadeLeft');
+  const pad=5, x=Math.max(0,r.left-pad), y=Math.max(0,r.top-pad), rr=Math.min(innerWidth,r.right+pad), bb=Math.min(innerHeight,r.bottom+pad);
+  top.style.cssText=`left:0;top:0;width:100%;height:${y}px`;
+  bottom.style.cssText=`left:0;top:${bb}px;width:100%;height:${Math.max(0,innerHeight-bb)}px`;
+  left.style.cssText=`left:0;top:${y}px;width:${x}px;height:${Math.max(0,bb-y)}px`;
+  right.style.cssText=`left:${rr}px;top:${y}px;width:${Math.max(0,innerWidth-rr)}px;height:${Math.max(0,bb-y)}px`;
+}
+function guidePlaceTip(r,side){
+  const tip=$('guideTip'); const gap=16; const w=tip.offsetWidth, h=tip.offsetHeight;
+  let x,y;
+  if(side==='bottom'){x=r.left+r.width/2-w/2;y=r.bottom+gap}
+  else if(side==='top'){x=r.left+r.width/2-w/2;y=r.top-h-gap}
+  else if(side==='left'){x=r.left-w-gap;y=r.top+r.height/2-h/2}
+  else{x=r.right+gap;y=r.top+r.height/2-h/2}
+  x=Math.max(12,Math.min(innerWidth-w-12,x)); y=Math.max(12,Math.min(innerHeight-h-12,y));
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function guidePrepareTarget(t){
+  if(t?.classList.contains('collapsible')){
+    const id=t.id;
+    if(!(id in guideCollapsedState)) guideCollapsedState[id]=t.classList.contains('collapsed');
+    t.classList.remove('collapsed');
+  }
+  t?.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
+}
+function guideShow(i){
+  guideIndex=Math.max(0,Math.min(GUIDE_STEPS.length-1,i));
+  const step=GUIDE_STEPS[guideIndex], t=guideTarget(step); if(!t)return;
+  guideClearFocus(); guidePrepareTarget(t); t.classList.add('guideFocus');
+  const r=t.getBoundingClientRect(); guideSetShades(r);
+  $('guideStepCount').textContent=`${guideIndex+1} / ${GUIDE_STEPS.length}`;
+  $('guideJump').value=String(guideIndex);
+  $('guideStepTitle').textContent=step.title; $('guideStepBody').innerHTML=`<p>${step.body}</p>`;
+  guidePlaceTip(r,step.side||'right');
+}
+function guideCloseTour(){
+  guideClearFocus();
+  for(const [id,was] of Object.entries(guideCollapsedState)){const e=$(id);if(e)e.classList.toggle('collapsed',was)}
+  guideCollapsedState={}; $('guide').hidden=true; $('guide').setAttribute('aria-hidden','true'); document.body.style.overflow='';
+  if(guidePrevFocus?.focus)guidePrevFocus.focus();
+}
+function guideOpen(){
+  guidePrevFocus=document.activeElement;
+  guideIndex=0;
+  $('guide').hidden=false; $('guide').setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+  guideShow(guideIndex);
+  $('guideJump').focus();
+}
+GUIDE_STEPS.forEach((step,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=`${i+1}. ${step.title}`;$('guideJump').appendChild(o)});
+$('guideBtn').addEventListener('click',()=>guideOpen());
+$('guideClose').addEventListener('click',guideCloseTour);
+$('guideJump').addEventListener('change',e=>guideShow(+e.target.value));
+document.addEventListener('keydown',e=>{
+  if($('guide').hidden)return;
+  if(e.key==='Escape')guideCloseTour();
+  else if(e.key==='ArrowRight')guideShow(guideIndex+1);
+  else if(e.key==='ArrowLeft')guideShow(guideIndex-1);
+  else if(e.key==='Home')guideShow(0);
+  else if(e.key==='End')guideShow(GUIDE_STEPS.length-1);
+});
+window.addEventListener('resize',()=>{if(!$('guide').hidden)guideShow(guideIndex)});
+
+// 문구/스티커 메뉴는 제목을 눌러 접었다 펼칠 수 있습니다.
+function setupCollapsibleSection(id, storageKey){
+  const section=$(id);
+  if(!section) return;
+  const title=section.querySelector("h3");
+  if(!title) return;
+  title.setAttribute("role","button");
+  title.setAttribute("tabindex","0");
+  const setCollapsed=collapsed=>{
+    section.classList.toggle("collapsed",collapsed);
+    title.setAttribute("aria-expanded",String(!collapsed));
+    try{localStorage.setItem(storageKey,collapsed?"1":"0")}catch(e){}
+  };
+  let collapsed=false;
+  try{collapsed=localStorage.getItem(storageKey)==="1"}catch(e){}
+  setCollapsed(collapsed);
+  const toggle=()=>setCollapsed(!section.classList.contains("collapsed"));
+  title.addEventListener("click",toggle);
+  title.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();}
+  });
+}
+setupCollapsibleSection("captionSection","stampAtelier.captionCollapsed");
+setupCollapsibleSection("stickerSection","stampAtelier.stickerCollapsed");
+
 const canvas = $("canvas"), ctx = canvas.getContext("2d");
 
 let img = null;
 let offsetX = 0, offsetY = 0;
 let scale = 1, rotation = 0, brightness = 1;
 
-function setText(id, value){ $(id).textContent = value; }
+function setText(id, value){
+  const el=$(id);
+  if(el._inp){ // 값 표시가 입력칸으로 바뀐 슬라이더: 숫자만 입력칸에, 단위는 옆 글자에
+    const m=String(value).match(/^(-?[\d.]+)\s*(.*)$/);
+    if(m){ if(document.activeElement!==el._inp) el._inp.value=m[1]; el._unit.textContent=m[2]; return; }
+  }
+  el.textContent=value;
+}
+// 슬라이더 옆의 값 표시를 직접 입력할 수 있는 숫자칸으로 바꿈 (범위를 벗어나면 가장 가까운 값으로 맞춤)
+function enhanceValueBoxes(){
+  document.querySelectorAll("aside .field").forEach(f=>{
+    const rng=f.querySelector("input[type=range]"), sp=f.querySelector('label span[id$="Val"]');
+    if(!rng||!sp) return;
+    const m=sp.textContent.trim().match(/^(-?[\d.]+)\s*(.*)$/); if(!m) return;
+    sp.textContent=""; sp.classList.add("val");
+    const inp=document.createElement("input");
+    inp.type="number"; inp.className="numin"; inp.min=rng.min; inp.max=rng.max; inp.step=rng.step||1; inp.value=m[1];
+    inp.title=`직접 입력 (${rng.min} ~ ${rng.max})`;
+    const un=document.createElement("em"); un.textContent=m[2];
+    sp.append(inp,un); sp._inp=inp; sp._unit=un;
+    const apply=final=>{
+      let v=parseFloat(inp.value); const lo=+rng.min, hi=+rng.max;
+      if(!isFinite(v)){ if(final) inp.value=rng.value; return; }
+      if(!final && (v<lo||v>hi)) return;       // 타이핑 도중(예: 50을 치려고 5까지 친 상태)에는 범위 밖 값을 건드리지 않음
+      v=Math.min(hi,Math.max(lo,v)); rng.value=v;
+      rng.dispatchEvent(new Event("input",{bubbles:true}));
+      if(final){ rng.dispatchEvent(new Event("change",{bubbles:true})); inp.value=rng.value; }
+    };
+    inp.addEventListener("input",()=>apply(false));
+    inp.addEventListener("change",()=>apply(true));
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter") inp.blur(); });
+  });
+}
 
 const CAPTION_FONTS={
   serif:'Georgia, "Times New Roman", serif',
@@ -503,6 +694,29 @@ function syncOut(){ $("outW").value=canvas.width; $("outH").value=canvas.height;
 const CAP_MAX=4;
 const capDefault=()=>({text:"",font:"serif",color:"#1e1c18",size:34,bold:true,italic:false,spacing:0,sx:100,sy:100,x:0,y:0,outline:0,outlineColor:"#ffffff",rot:0,alpha:12,blend:"source-over"});
 let captions=[capDefault()], capCur=0;
+let capHist=[[]], capCommitted=[{...captions[0]}];
+function capClone(c){ return {...c}; }
+function capCommit(){
+  const cur=readCap(), prev=capCommitted[capCur];
+  if(!prev || JSON.stringify(cur)!==JSON.stringify(prev)){
+    capHist[capCur]=capHist[capCur]||[]; capHist[capCur].push(capClone(prev||capDefault()));
+    if(capHist[capCur].length>50) capHist[capCur].shift();
+    capCommitted[capCur]=capClone(cur);
+    renderTabs();
+  }
+}
+function undoCap(){
+  const h=capHist[capCur]; if(!h||!h.length) return;
+  const prev=h.pop();
+  captions[capCur]=capClone(prev); capCommitted[capCur]=capClone(prev);
+  writeCap(captions[capCur]); renderTabs(); draw();
+}
+function resetCap(){
+  capCommit();
+  capHist[capCur]=capHist[capCur]||[]; capHist[capCur].push(capClone(readCap()));
+  captions[capCur]=capDefault(); capCommitted[capCur]=capClone(captions[capCur]);
+  writeCap(captions[capCur]); renderTabs(); draw();
+}
 function readCap(){
   return {text:$("caption").value, font:$("captionFont").value, color:$("captionColor").value,
     size:+$("fontSize").value, bold:$("capBold").checked, italic:$("capItalic").checked,
@@ -526,24 +740,29 @@ function writeCap(c){
   const bl=$("capBlend"); bl.value=[...bl.options].some(o=>o.value===c.blend)?c.blend:"source-over";
   $("captionOutlineColor").value=c.outlineColor;
 }
-function selectCap(i){ captions[capCur]=readCap(); capCur=i; writeCap(captions[i]); renderTabs(); draw(); }
+function selectCap(i){ capCommit(); captions[capCur]=readCap(); capCur=i; writeCap(captions[i]); renderTabs(); draw(); }
 function addCap(){
   if(captions.length>=CAP_MAX) return;
-  captions[capCur]=readCap(); captions.push({...captions[capCur]}); capCur=captions.length-1;
+  capCommit(); captions[capCur]=readCap(); captions.push({...captions[capCur]}); capHist.push([]); capCommitted.push(capClone(captions[capCur+1])); capCur=captions.length-1;
   writeCap(captions[capCur]); renderTabs(); draw();
 }
-function moveCap(d){ // 번호가 클수록 위에 그려지는 레이어. 선택한 문구를 앞/뒤 번호와 맞바꿈
+function moveCap(d){ // 1번이 가장 위 레이어. 선택한 문구를 앞/뒤 번호와 맞바꿈
   const j=capCur+d; if(j<0||j>=captions.length) return;
-  captions[capCur]=readCap(); [captions[capCur],captions[j]]=[captions[j],captions[capCur]]; capCur=j;
-  renderTabs(); draw();
+  capCommit(); captions[capCur]=readCap(); [captions[capCur],captions[j]]=[captions[j],captions[capCur]]; [capHist[capCur],capHist[j]]=[capHist[j],capHist[capCur]]; [capCommitted[capCur],capCommitted[j]]=[capCommitted[j],capCommitted[capCur]]; capCur=j;
+  writeCap(captions[capCur]); renderTabs(); draw();
 }
 function delCap(){
   if(captions.length<2) return;
-  captions.splice(capCur,1); capCur=Math.min(capCur,captions.length-1);
+  capCommit(); captions.splice(capCur,1); capHist.splice(capCur,1); capCommitted.splice(capCur,1); capCur=Math.min(capCur,captions.length-1);
   writeCap(captions[capCur]); renderTabs(); draw();
 }
+$("capUndo").onclick=undoCap;
+$("capReset").onclick=resetCap;
+$("capDelete").onclick=delCap;
 function renderTabs(){
   const box=$("capTabs"); box.innerHTML="";
+  $("capUndo").disabled=!(capHist[capCur]?.length);
+  $("capDelete").disabled=captions.length<2;
   captions.forEach((c,i)=>{
     const b=document.createElement("button");
     b.textContent=i+1; b.title=`문구 ${i+1}`; if(i===capCur) b.classList.add("active");
@@ -554,9 +773,8 @@ function renderTabs(){
   add.disabled=captions.length>=CAP_MAX; add.onclick=addCap; box.appendChild(add);
   const rt=document.createElement("span"); rt.className="caprt"; rt.style.display=captions.length<2?"none":"";
   const mk=(txt,title,fn,dis)=>{ const b=document.createElement("button"); b.textContent=txt; b.title=title; b.disabled=dis; b.onclick=fn; rt.appendChild(b); };
-  mk("◀","레이어 아래로 (번호가 작을수록 아래에 그려져요)",()=>moveCap(-1),capCur===0);
-  mk("▶","레이어 위로 (번호가 클수록 위에 그려져요)",()=>moveCap(1),capCur===captions.length-1);
-  mk("삭제","이 문구 삭제",delCap,false);
+  mk("◀","레이어 앞으로 (1번이 가장 위에 그려져요)",()=>moveCap(-1),capCur===0);
+  mk("▶","레이어 뒤로 (번호가 클수록 아래에 그려져요)",()=>moveCap(1),capCur===captions.length-1);
   box.appendChild(rt);
 }
 // 자간 적용 텍스트 (letterSpacing 미지원 브라우저는 글자별로 직접 배치)
@@ -601,6 +819,7 @@ function autoSize(image){
   const k = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
   const iw = Math.max(200, Math.round(image.naturalWidth * k));
   const ih = Math.max(200, Math.round(image.naturalHeight * k));
+  clearTextureCache();
   canvas.width = iw;
   canvas.height = ih;
   syncOut();
@@ -636,6 +855,10 @@ $("drop").ondrop = e => {
   loadFile(e.dataTransfer.files[0]);
 };
 
+function getBorderSides(){
+  return {top:$("borderTop").checked,bottom:$("borderBottom").checked,left:$("borderLeft").checked,right:$("borderRight").checked};
+}
+
 function drawPerforatedRect(x,y,w,h, color, step=18, radius=5.2){
   // 가장자리의 작은 원을 투명하게 도려내어 실제 우표의 천공처럼 표현합니다.
   ctx.save();
@@ -645,33 +868,37 @@ function drawPerforatedRect(x,y,w,h, color, step=18, radius=5.2){
   const topN = Math.max(2, Math.floor((w+2*radius)/step));
   const sideN = Math.max(2, Math.floor((h+2*radius)/step));
   const tw = (w+2*radius)/topN, th = (h+2*radius)/sideN;
+  const sides = getBorderSides();
 
   ctx.fillStyle = "#000";
-
   for(let i=1;i<topN;i++){
     const cx = x + i*tw - radius;
-    ctx.beginPath(); ctx.arc(cx, y, radius, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx, y+h, radius, 0, Math.PI*2); ctx.fill();
+    if(sides.top){ctx.beginPath(); ctx.arc(cx, y, radius, 0, Math.PI*2); ctx.fill();}
+    if(sides.bottom){ctx.beginPath(); ctx.arc(cx, y+h, radius, 0, Math.PI*2); ctx.fill();}
   }
-
   for(let i=1;i<sideN;i++){
     const cy = y + i*th - radius;
-    ctx.beginPath(); ctx.arc(x, cy, radius, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+w, cy, radius, 0, Math.PI*2); ctx.fill();
+    if(sides.left){ctx.beginPath(); ctx.arc(x, cy, radius, 0, Math.PI*2); ctx.fill();}
+    if(sides.right){ctx.beginPath(); ctx.arc(x+w, cy, radius, 0, Math.PI*2); ctx.fill();}
   }
-
   ctx.restore();
 }
+
 // 추가 테두리 스타일: 사각 톱니 / 삼각 톱니 / 물결 / 티켓 노치 / 사선 모서리
 const EDGE_LW=12; // 둥근 모서리 스타일의 테두리 두께 (여백과 무관하게 고정)
 function drawEdgeStyle(style, w, h, pk){
-  const r=5.2*pk;
+  const r=5.2*pk, sides=getBorderSides();
   ctx.save();
   ctx.globalCompositeOperation="destination-out";
   ctx.fillStyle="#000";
   if(style==="ticket"||style==="bevel"){
     const R=Math.max(14,r*3);
-    for(const [cx,cy] of [[0,0],[w,0],[0,h],[w,h]]){
+    const corners=[
+      [0,0,sides.top&&sides.left],[w,0,sides.top&&sides.right],
+      [0,h,sides.bottom&&sides.left],[w,h,sides.bottom&&sides.right]
+    ];
+    for(const [cx,cy,on] of corners){
+      if(!on) continue;
       const sx=cx===0?1:-1, sy=cy===0?1:-1;
       ctx.beginPath();
       if(style==="ticket") ctx.arc(cx,cy,R,0,Math.PI*2);
@@ -682,34 +909,45 @@ function drawEdgeStyle(style, w, h, pk){
     const S=r*3.2, d=S*.6;
     const nx=Math.max(2,Math.round(w/S)), ny=Math.max(2,Math.round(h/S));
     const tx=w/nx, ty=h/ny;
-    for(let i=0;i<nx;i++){
+    if(sides.top) for(let i=0;i<nx;i++){
+      if((i===0&&!sides.left)||(i===nx-1&&!sides.right)) continue;
       const a=i*tx,b=a+tx,m=(a+b)/2;
       ctx.beginPath();ctx.moveTo(a,0);ctx.lineTo(b,0);ctx.lineTo(m,d);ctx.closePath();ctx.fill();
+    }
+    if(sides.bottom) for(let i=0;i<nx;i++){
+      if((i===0&&!sides.left)||(i===nx-1&&!sides.right)) continue;
+      const a=i*tx,b=a+tx,m=(a+b)/2;
       ctx.beginPath();ctx.moveTo(a,h);ctx.lineTo(b,h);ctx.lineTo(m,h-d);ctx.closePath();ctx.fill();
     }
-    for(let i=0;i<ny;i++){
+    if(sides.left) for(let i=0;i<ny;i++){
+      if((i===0&&!sides.top)||(i===ny-1&&!sides.bottom)) continue;
       const a=i*ty,b=a+ty,m=(a+b)/2;
       ctx.beginPath();ctx.moveTo(0,a);ctx.lineTo(0,b);ctx.lineTo(d,m);ctx.closePath();ctx.fill();
+    }
+    if(sides.right) for(let i=0;i<ny;i++){
+      if((i===0&&!sides.top)||(i===ny-1&&!sides.bottom)) continue;
+      const a=i*ty,b=a+ty,m=(a+b)/2;
       ctx.beginPath();ctx.moveTo(w,a);ctx.lineTo(w,b);ctx.lineTo(w-d,m);ctx.closePath();ctx.fill();
     }
   } else if(style==="scallop"){
-    // 물결: 구멍 중심을 모서리 포함 가장자리 전체에 균등 배치해서 모서리도 둥글게 깎음
+    // 물결: 선택한 변만 파고, 인접한 변을 끈 모서리는 보존합니다.
     const S=r*3.6;
     const nx=Math.max(2,Math.round(w/S)), ny=Math.max(2,Math.round(h/S));
     const sx=w/nx, sy=h/ny;
     const bite=(cx,cy,rad)=>{ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.fill();};
-    for(let i=0;i<=nx;i++){bite(i*sx,0,sx/2+.5);bite(i*sx,h,sx/2+.5);}
-    for(let i=0;i<=ny;i++){bite(0,i*sy,sy/2+.5);bite(w,i*sy,sy/2+.5);}
+    if(sides.top) for(let i=0;i<=nx;i++){if((i===0&&!sides.left)||(i===nx&&!sides.right)) continue;bite(i*sx,0,sx/2+.5);}
+    if(sides.bottom) for(let i=0;i<=nx;i++){if((i===0&&!sides.left)||(i===nx&&!sides.right)) continue;bite(i*sx,h,sx/2+.5);}
+    if(sides.left) for(let i=0;i<=ny;i++){if((i===0&&!sides.top)||(i===ny&&!sides.bottom)) continue;bite(0,i*sy,sy/2+.5);}
+    if(sides.right) for(let i=0;i<=ny;i++){if((i===0&&!sides.top)||(i===ny&&!sides.bottom)) continue;bite(w,i*sy,sy/2+.5);}
   } else { // square: 모서리는 온전히 남기고 이빨 폭이 같도록 간격 계산
-    const S=style==="scallop"?2*r:18*Math.max(1,pk);
+    const S=18*Math.max(1,pk);
     const nx=Math.max(2,Math.floor((w+2*r)/S)), ny=Math.max(2,Math.floor((h+2*r)/S));
     const sx=(w+2*r)/nx, sy=(h+2*r)/ny;
-    const cut=(cx,cy)=>{
-      if(style==="square") ctx.fillRect(cx-r,cy-r,2*r,2*r);
-      else{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();}
-    };
-    for(let i=1;i<nx;i++){const cx=i*sx-r;cut(cx,0);cut(cx,h);}
-    for(let i=1;i<ny;i++){const cy=i*sy-r;cut(0,cy);cut(w,cy);}
+    const cut=(cx,cy)=>ctx.fillRect(cx-r,cy-r,2*r,2*r);
+    if(sides.top) for(let i=1;i<nx;i++){const cx=i*sx-r;cut(cx,0);}
+    if(sides.bottom) for(let i=1;i<nx;i++){const cx=i*sx-r;cut(cx,h);}
+    if(sides.left) for(let i=1;i<ny;i++){const cy=i*sy-r;cut(0,cy);}
+    if(sides.right) for(let i=1;i<ny;i++){const cy=i*sy-r;cut(w,cy);}
   }
   ctx.restore();
 }
@@ -774,18 +1012,8 @@ function drawFrameLines(o){
       ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
       framePath(ctx,-innerW/2-g+.5,-innerH/2-g+.5,innerW+2*g-1,innerH+2*g-1,sh); ctx.stroke();
     } else if(mode==="wrap"){
-      const fx=margin-g+.5, fy=margin-g+.5, fw=w-2*(margin-g)-1, fh=h-2*(margin-g)-1;
-      ctx.save();                                   // 1) 액자 선 중 이미지가 있는 구간
-      ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
-      ctx.beginPath(); ctx.rect(-(dw/2+g),-(dh/2+g),dw+2*g,dh+2*g); ctx.clip();
-      ctx.setTransform(1,0,0,1,0,0);
-      framePath(ctx,fx,fy,fw,fh,sh); ctx.stroke();
-      ctx.restore();
-      ctx.save();                                   // 2) 이미지 가장자리 중 액자 안쪽 구간
-      framePath(ctx,fx,fy,fw,fh,sh); ctx.clip();
-      ctx.translate(w/2+ox,h/2+oy); ctx.rotate(rot);
-      ctx.strokeRect(-(dw/2+g),-(dh/2+g),dw+2*g,dh+2*g);
-      ctx.restore();
+      const V=visiblePoly({w,h,margin,innerW,innerH,ox,oy,rot,dw,dh,fixed:true},g-.5);
+      if(V.length>=3){ polyPath(ctx,V,sh); ctx.stroke(); }
     } else {
       framePath(ctx,margin-g+.5,margin-g+.5,w-2*(margin-g)-1,h-2*(margin-g)-1,sh); ctx.stroke();
     }
@@ -793,72 +1021,198 @@ function drawFrameLines(o){
   }
 }
 
-let texImg=null;
+// ---- 보이는 이미지 영역(이미지 ∩ 액자 창)의 다각형과, 그 모서리를 깎은 경로 ----
+function clipPoly(subj,clip){                      // Sutherland–Hodgman (두 다각형 모두 시계 방향)
+  let out=subj;
+  for(let i=0;i<clip.length&&out.length;i++){
+    const a=clip[i], b=clip[(i+1)%clip.length], inp=out; out=[];
+    const side=p=>(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);
+    for(let j=0;j<inp.length;j++){
+      const P=inp[j], Q=inp[(j+1)%inp.length], sp=side(P), sq=side(Q);
+      if(sp>=0) out.push(P);
+      if((sp>=0)!==(sq>=0)){ const t=sp/(sp-sq); out.push([P[0]+(Q[0]-P[0])*t,P[1]+(Q[1]-P[1])*t]); }
+    }
+  }
+  return out;
+}
+function cleanPoly(pts){                           // 거의 같은 점·일직선 위의 점 제거 (모서리 반경이 불필요하게 줄어드는 것 방지)
+  const near=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<=0.6;
+  let p=[]; for(const q of pts){ if(!p.length||!near(q,p[p.length-1])) p.push(q); }
+  if(p.length>1&&near(p[0],p[p.length-1])) p.pop();
+  for(let again=true;again&&p.length>3;){
+    again=false;
+    for(let i=0;i<p.length;i++){
+      const a=p[(i+p.length-1)%p.length], b=p[i], c=p[(i+1)%p.length];
+      const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+      const l=Math.hypot(b[0]-a[0],b[1]-a[1])*Math.hypot(c[0]-b[0],c[1]-b[1]);
+      if(l>0&&Math.abs(cr)/l<0.01){ p.splice(i,1); again=true; break; }
+    }
+  }
+  return p;
+}
+// g: 이미지 위치·크기, e: 바깥(+)/안쪽(-)으로 넓힌 정도. g.fixed면 액자 창이 고정(액자 안에서만), 아니면 이미지와 함께 이동
+function visiblePoly(g,e){
+  const cx=g.w/2+g.ox, cy=g.h/2+g.oy, c=Math.cos(g.rot), s=Math.sin(g.rot);
+  const rotRect=(hw,hh)=>[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([x,y])=>[cx+x*c-y*s,cy+x*s+y*c]);
+  const img=rotRect(g.dw/2+e,g.dh/2+e);
+  const win=g.fixed
+    ? [[g.margin-e,g.margin-e],[g.w-g.margin+e,g.margin-e],[g.w-g.margin+e,g.h-g.margin+e],[g.margin-e,g.h-g.margin+e]]
+    : rotRect(g.innerW/2+e,g.innerH/2+e);
+  return cleanPoly(clipPoly(img,win));
+}
+function polyPath(c,pts,sh){
+  c.beginPath();
+  const n=pts.length; if(n<3) return;
+  let area=0; for(let i=0;i<n;i++){ const a=pts[i], b=pts[(i+1)%n]; area+=a[0]*b[1]-b[0]*a[1]; }
+  const P=area<0?pts.slice().reverse():pts;        // 시계 방향으로 통일
+  if(sh.size<=0||!sh.cn.some(Boolean)){ c.moveTo(P[0][0],P[0][1]); for(let i=1;i<n;i++) c.lineTo(P[i][0],P[i][1]); c.closePath(); return; }
+  const mx=P.reduce((t,q)=>t+q[0],0)/n, my=P.reduce((t,q)=>t+q[1],0)/n;
+  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  const m0=mid(P[n-1],P[0]); c.moveTo(m0[0],m0[1]);
+  for(let i=0;i<n;i++){
+    const v=P[i], pr=P[(i+n-1)%n], nx=P[(i+1)%n], mn=mid(v,nx);
+    const on=sh.cn[v[0]<mx?(v[1]<my?0:3):(v[1]<my?1:2)];          // 좌상·우상·우하·좌하 중 어느 모서리인지
+    if(!on){ c.lineTo(v[0],v[1]); c.lineTo(mn[0],mn[1]); continue; }
+    const lp=Math.hypot(pr[0]-v[0],pr[1]-v[1]), ln=Math.hypot(nx[0]-v[0],nx[1]-v[1]);
+    const up=[(pr[0]-v[0])/lp,(pr[1]-v[1])/lp], un=[(nx[0]-v[0])/ln,(nx[1]-v[1])/ln];
+    const th=Math.acos(Math.max(-1,Math.min(1,up[0]*un[0]+up[1]*un[1])));   // 꼭짓점의 내각
+    const half=Math.min(lp,ln)/2;
+    if(sh.style==="cut"){
+      const d=Math.min(sh.size,half);
+      c.lineTo(v[0]+up[0]*d,v[1]+up[1]*d); c.lineTo(v[0]+un[0]*d,v[1]+un[1]*d);
+    } else if(sh.style==="notch"){
+      const d=Math.min(sh.size,half);
+      c.lineTo(v[0]+up[0]*d,v[1]+up[1]*d);
+      c.arc(v[0],v[1],d,Math.atan2(up[1],up[0]),Math.atan2(un[1],un[0]),true);
+    } else {
+      c.arcTo(v[0],v[1],mn[0],mn[1],Math.min(sh.size,half*Math.tan(th/2)));
+    }
+    c.lineTo(mn[0],mn[1]);
+  }
+  c.closePath();
+}
 
-// 불러온 텍스처 이미지를 우표의 불투명한 부분에만 합성 (구멍/둥근 모서리 바깥은 투명 유지)
-function paperCustom(amount, w, h){
-  if(!texImg) return;
+let texImg=null;
+let textureCacheLayer=null;
+let textureCacheKey="";
+let customPatternCache=null;
+let customPatternKey="";
+let customCompositeCache=null;
+
+function clearTextureCache(){
+  textureCacheLayer=null;
+  textureCacheKey="";
+  customPatternCache=null;
+  customPatternKey="";
+  customCompositeCache=null;
+}
+
+// 불러온 텍스처를 반복/채우기 방식으로 만든 원본 패턴만 캐시합니다.
+// 실제 캔버스의 투명한 천공에는 렌더링할 때 source-atop으로만 합성합니다.
+function getCustomPattern(w,h){
+  if(!texImg) return null;
+  const fit=$("texFit").value;
+  const key=`${w}x${h}|${fit}|${texImg.src}`;
+  if(customPatternCache && customPatternKey===key) return customPatternCache;
   const off=document.createElement("canvas"); off.width=w; off.height=h;
   const o=off.getContext("2d");
-  if($("texFit").value==="tile"){
+  if(fit==="tile"){
     o.fillStyle=o.createPattern(texImg,"repeat"); o.fillRect(0,0,w,h);
   } else {
     const iw=texImg.naturalWidth, ih=texImg.naturalHeight, f=Math.max(w/iw,h/ih);
     o.drawImage(texImg,(w-iw*f)/2,(h-ih*f)/2,iw*f,ih*f);
   }
-  o.globalCompositeOperation="destination-in";
-  o.drawImage(canvas,0,0);
+  customPatternCache=off; customPatternKey=key;
+  return off;
+}
+
+function paperCustom(amount, w, h){
+  const pattern=getCustomPattern(w,h);
+  if(!pattern) return;
+  if(!customCompositeCache || customCompositeCache.width!==w || customCompositeCache.height!==h){
+    customCompositeCache=document.createElement("canvas");
+    customCompositeCache.width=w; customCompositeCache.height=h;
+  }
+  const m=customCompositeCache.getContext("2d");
+  m.clearRect(0,0,w,h);
+  m.drawImage(pattern,0,0);
+  m.globalCompositeOperation="destination-in";
+  m.drawImage(canvas,0,0);
   ctx.save();
   ctx.globalCompositeOperation=$("texBlend").value;
   ctx.globalAlpha=Math.min(1,amount/100);
-  ctx.drawImage(off,0,0);
+  ctx.drawImage(customCompositeCache,0,0);
   ctx.restore();
 }
 
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-// 기본(점) 외 질감. 시드 고정이라 슬라이더를 움직여도 무늬가 흔들리지 않고, 불투명한 부분(구멍 제외)에만 그림.
-function paperTexture(tex, amount, w, h){
-  const k=amount/100, r=mulberry32(20260101), u=Math.max(1,Math.max(w,h)/800);
+function makeTextureLayer(tex,w,h){
+  const key=`${tex}|${w}x${h}`;
+  if(textureCacheLayer && textureCacheKey===key) return textureCacheLayer;
+  const off=document.createElement("canvas"); off.width=w; off.height=h;
+  const c=off.getContext("2d");
+  const r=mulberry32(20260101 ^ w ^ (h<<1));
+  const u=Math.max(1,Math.max(w,h)/800);
   const st=Math.max(2,Math.round(3*u)), lw=Math.max(1,Math.round(u));
-  ctx.save();
-  ctx.globalCompositeOperation="source-atop";
+  c.clearRect(0,0,w,h);
   if(tex==="fiber"){
-    const n=Math.floor(w*h*k*0.0012);
-    ctx.lineWidth=Math.max(.5,.7*u);
+    const n=Math.floor(w*h*0.0012);
+    c.lineWidth=Math.max(.5,.7*u);
     for(let i=0;i<n;i++){
       const x=r()*w,y=r()*h,a=r()*Math.PI*2,l=(6+r()*18)*u,b=(r()-.5)*l*.6;
-      ctx.strokeStyle=r()>.5?"rgba(70,55,40,.16)":"rgba(255,255,255,.22)";
-      ctx.beginPath();ctx.moveTo(x,y);
-      ctx.quadraticCurveTo(x+Math.cos(a)*l/2-Math.sin(a)*b,y+Math.sin(a)*l/2+Math.cos(a)*b,x+Math.cos(a)*l,y+Math.sin(a)*l);
-      ctx.stroke();
+      c.strokeStyle=r()>.5?"rgba(70,55,40,.16)":"rgba(255,255,255,.22)";
+      c.beginPath();c.moveTo(x,y);
+      c.quadraticCurveTo(x+Math.cos(a)*l/2-Math.sin(a)*b,y+Math.sin(a)*l/2+Math.cos(a)*b,x+Math.cos(a)*l,y+Math.sin(a)*l);
+      c.stroke();
     }
   } else if(tex==="laid"){
-    const a=.02+.10*k;
-    for(let y=0;y<h;y+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.4+r()*.6)})`;ctx.fillRect(0,y,w,lw);}
-    for(let x=0;x<w;x+=st*12){ctx.fillStyle=`rgba(255,255,255,${a*1.2})`;ctx.fillRect(x,0,lw,h);}
+    const a=.12;
+    for(let y=0;y<h;y+=st){c.fillStyle=`rgba(0,0,0,${a*(.4+r()*.6)})`;c.fillRect(0,y,w,lw);}
+    for(let x=0;x<w;x+=st*12){c.fillStyle=`rgba(255,255,255,${a*1.2})`;c.fillRect(x,0,lw,h);}
   } else if(tex==="canvas"){
-    const a=.03+.12*k;
-    for(let y=0;y<h;y+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;ctx.fillRect(0,y,w,lw);}
-    for(let x=0;x<w;x+=st){ctx.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;ctx.fillRect(x,0,lw,h);}
+    const a=.15;
+    for(let y=0;y<h;y+=st){c.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;c.fillRect(0,y,w,lw);}
+    for(let x=0;x<w;x+=st){c.fillStyle=`rgba(0,0,0,${a*(.5+r()*.5)})`;c.fillRect(x,0,lw,h);}
   } else if(tex==="stain"){
-    const n=4+Math.floor(k*26);
+    const n=30;
     for(let i=0;i<n;i++){
       const x=r()*w,y=r()*h,rad=(25+r()*110)*u;
-      const g=ctx.createRadialGradient(x,y,0,x,y,rad);
-      g.addColorStop(0,`rgba(130,95,40,${.03+.12*k*r()})`);
+      const g=c.createRadialGradient(x,y,0,x,y,rad);
+      g.addColorStop(0,"rgba(130,95,40,.12)");
       g.addColorStop(1,"rgba(130,95,40,0)");
-      ctx.fillStyle=g;ctx.fillRect(x-rad,y-rad,rad*2,rad*2);
+      c.fillStyle=g;c.fillRect(x-rad,y-rad,rad*2,rad*2);
     }
   } else if(tex==="grain"){
-    const id=ctx.getImageData(0,0,w,h),d=id.data,amp=k*60;
+    // 매 렌더마다 getImageData/putImageData를 하지 않고 노이즈 오버레이 자체를 캐시합니다.
+    const id=c.createImageData(w,h),d=id.data;
     for(let i=0;i<d.length;i+=4){
-      if(!d[i+3])continue;
-      const v=(r()-.5)*amp;
-      d[i]+=v;d[i+1]+=v;d[i+2]+=v;
+      const v=r()>.5;
+      d[i]=v?255:0; d[i+1]=v?255:0; d[i+2]=v?255:0;
+      d[i+3]=Math.round(22*r());
     }
-    ctx.putImageData(id,0,0);
+    c.putImageData(id,0,0);
+  } else if(tex==="dot"){
+    const n=Math.floor(w*h*0.003);
+    c.save(); c.globalAlpha=.10;
+    for(let i=0;i<n;i++){
+      const x=r()*w,y=r()*h,a=15+r()*35;
+      c.fillStyle=r()>.5?`rgb(${a},${a},${a})`:`rgb(${220+a},${220+a},${220+a})`;
+      c.fillRect(x,y,r()*1.4+.3,r()*1.4+.3);
+    }
+    c.restore();
   }
+  textureCacheLayer=off; textureCacheKey=key;
+  return off;
+}
+
+function paperTexture(tex, amount, w, h){
+  if(amount<=0) return;
+  const layer=makeTextureLayer(tex,w,h);
+  ctx.save();
+  ctx.globalCompositeOperation=tex==="grain"?"source-atop":"source-atop";
+  ctx.globalAlpha=Math.min(1,amount/100);
+  ctx.drawImage(layer,0,0);
   ctx.restore();
 }
 
@@ -867,23 +1221,67 @@ function paperNoise(amount, w, h){
   const tex=$("textureStyle").value;
   if(tex==="none") return;
   if(tex==="custom"){ paperCustom(amount,w,h); return; }
-  if(tex!=="dot"){ paperTexture(tex,amount,w,h); return; }
-  const n = Math.floor(w*h*amount*0.003);
-  ctx.save(); ctx.globalAlpha = 0.10;
-  for(let i=0;i<n;i++){
-    const x=Math.random()*w, y=Math.random()*h;
-    const a=15+Math.random()*35;
-    ctx.fillStyle = Math.random()>.5 ? `rgb(${a},${a},${a})` : `rgb(${220+a},${220+a},${220+a})`;
-    ctx.fillRect(x,y,Math.random()*1.4+.3,Math.random()*1.4+.3);
-  }
-  ctx.restore();
+  paperTexture(tex,amount,w,h);
 }
 
-function roundedImageArea(x,y,w,h,r){
-  ctx.beginPath(); ctx.roundRect(x,y,w,h,r); ctx.clip();
+// ---- 이미지 스티커 레이어 ----
+const STICKER_MAX=5;
+let stickers=[], stickerCur=-1, stickerHist=[], stickerCommitted=[];
+const stickerDefault=()=>({name:"스티커",src:"",visible:true,scale:100,rot:0,alpha:100,x:0,y:0,border:0,borderColor:"#ffffff"});
+function readSticker(){
+  if(stickerCur<0) return null;
+  return {visible:$('stickerVisible').checked,scale:+$('stickerScale').value,rot:+$('stickerRot').value,alpha:+$('stickerAlpha').value,x:+$('stickerX').value,y:+$('stickerY').value,border:+$('stickerBorder').value,borderColor:$('stickerBorderColor').value};
+}
+function writeSticker(st){
+  if(!st) return;
+  $('stickerVisible').checked=!!st.visible;
+  const set=(id,v,lab,suf)=>{$(id).value=v;setText(lab,`${v}${suf}`)};
+  set('stickerScale',st.scale,'stickerScaleVal','%');set('stickerRot',st.rot,'stickerRotVal','°');set('stickerAlpha',st.alpha,'stickerAlphaVal','%');set('stickerX',st.x,'stickerXVal','%');set('stickerY',st.y,'stickerYVal','%');set('stickerBorder',st.border,'stickerBorderVal',' px');$('stickerBorderColor').value=st.borderColor||'#ffffff';
+}
+function stickerSnapshot(){return stickerCur<0?null:{...stickers[stickerCur],...readSticker()};}
+function stickerCommit(){
+  if(stickerCur<0)return;
+  const cur=stickerSnapshot(), prev=stickerCommitted[stickerCur];
+  if(!prev||JSON.stringify(cur)!==JSON.stringify(prev)){stickerHist[stickerCur]=stickerHist[stickerCur]||[];stickerHist[stickerCur].push({...prev});if(stickerHist[stickerCur].length>50)stickerHist[stickerCur].shift();stickerCommitted[stickerCur]={...cur};renderStickerTabs();}
+}
+function selectSticker(i){if(stickerCur>=0){stickers[stickerCur]={...stickers[stickerCur],...readSticker()};stickerCommit()}stickerCur=i;writeSticker(stickers[i]);renderStickerTabs();draw()}
+function renderStickerTabs(){
+  const box=$('stickerTabs');box.innerHTML='';
+  stickers.forEach((st,i)=>{const b=document.createElement('button');b.textContent=i+1;b.title=st.name||`스티커 ${i+1}`;if(i===stickerCur)b.classList.add('active');b.onclick=()=>selectSticker(i);box.appendChild(b)});
+  const hint=document.createElement('span');hint.className='muted';hint.style.marginLeft='4px';hint.textContent=stickers.length?`(${stickers.length}/${STICKER_MAX})`:'';box.appendChild(hint);
+  $('stickerControls').classList.toggle('hidden',stickerCur<0);if(stickerCur>=0){const h=stickerHist[stickerCur]||[];$('stickerUndo').disabled=!h.length;}
+}
+function addStickerFile(file){
+  if(stickers.length>=STICKER_MAX||!file||!file.type.startsWith('image/'))return;
+  const reader=new FileReader();reader.onload=e=>{const im=new Image();im.onload=()=>{const st={...stickerDefault(),name:file.name,src:e.target.result,img:im};const k=Math.min(1,420/Math.max(im.naturalWidth,im.naturalHeight));st.baseW=im.naturalWidth*k;st.baseH=im.naturalHeight*k;stickers.push(st);stickerHist.push([]);stickerCommitted.push({...st});stickerCur=stickers.length-1;writeSticker(st);renderStickerTabs();draw()};im.src=e.target.result};reader.readAsDataURL(file);
+}
+$('stickerDrop').onclick=()=>$('stickerFile').click();
+$('stickerFile').onchange=e=>{[...e.target.files].forEach(addStickerFile);e.target.value=''};
+$('stickerDrop').ondragover=e=>{e.preventDefault();$('stickerDrop').style.borderColor='#b99b61'};
+$('stickerDrop').ondragleave=()=>$('stickerDrop').style.borderColor='';
+$('stickerDrop').ondrop=e=>{e.preventDefault();$('stickerDrop').style.borderColor='';[...e.dataTransfer.files].forEach(addStickerFile)};
+function undoSticker(){if(stickerCur<0)return;const h=stickerHist[stickerCur];if(!h?.length)return;stickers[stickerCur]={...h.pop()};writeSticker(stickers[stickerCur]);stickerCommitted[stickerCur]={...stickers[stickerCur]};renderStickerTabs();draw()}
+function resetSticker(){if(stickerCur<0)return;stickerCommit();stickerHist[stickerCur].push({...stickers[stickerCur]});const keep={...stickers[stickerCur]};stickers[stickerCur]={...stickerDefault(),name:keep.name,src:keep.src,img:keep.img,baseW:keep.baseW,baseH:keep.baseH};writeSticker(stickers[stickerCur]);stickerCommitted[stickerCur]={...stickers[stickerCur]};renderStickerTabs();draw()}
+$('stickerUndo').onclick=undoSticker;$('stickerReset').onclick=resetSticker;$('stickerCenter').onclick=()=>{if(stickerCur<0)return;stickers[stickerCur].x=0;stickers[stickerCur].y=0;writeSticker(stickers[stickerCur]);draw();stickerCommit()};
+$('stickerDelete').onclick=()=>{if(stickerCur<0)return;stickers.splice(stickerCur,1);stickerHist.splice(stickerCur,1);stickerCommitted.splice(stickerCur,1);stickerCur=Math.min(stickerCur,stickers.length-1);if(stickerCur>=0)writeSticker(stickers[stickerCur]);renderStickerTabs();draw()};
+['stickerVisible','stickerScale','stickerRot','stickerAlpha','stickerX','stickerY','stickerBorder','stickerBorderColor'].forEach(id=>{$(id).addEventListener('input',()=>{if(stickerCur<0)return;stickers[stickerCur]={...stickers[stickerCur],...readSticker()};setText('stickerScaleVal',`${$('stickerScale').value}%`);setText('stickerRotVal',`${$('stickerRot').value}°`);setText('stickerAlphaVal',`${$('stickerAlpha').value}%`);setText('stickerXVal',`${$('stickerX').value}%`);setText('stickerYVal',`${$('stickerY').value}%`);setText('stickerBorderVal',`${$('stickerBorder').value} px`);draw()});$(id).addEventListener('change',stickerCommit)});
+function drawSticker(st,w,h){
+  if(!st.visible||!st.img)return;
+  const bw=st.baseW*st.scale/100,bh=st.baseH*st.scale/100,cx=w/2+st.x/100*w,cy=h/2+st.y/100*h,r=st.rot*Math.PI/180,b=st.border;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(r);ctx.globalAlpha=st.alpha/100;
+  if(b>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.16)';ctx.shadowBlur=Math.max(2,b*.6);ctx.fillStyle=st.borderColor||'#fff';ctx.beginPath();ctx.roundRect(-bw/2-b,-bh/2-b,bw+2*b,bh+2*b,Math.min(18,b));ctx.fill();ctx.restore()}
+  ctx.drawImage(st.img,-bw/2,-bh/2,bw,bh);ctx.restore();
 }
 
-function draw(){
+function stickerHit(st,x,y,w,h){
+  if(!st.visible||!st.img)return false;
+  const cx=w/2+st.x/100*w,cy=h/2+st.y/100*h,a=-st.rot*Math.PI/180,dx=x-cx,dy=y-cy;
+  const lx=dx*Math.cos(a)-dy*Math.sin(a),ly=dx*Math.sin(a)+dy*Math.cos(a);
+  const bw=st.baseW*st.scale/100/2+st.border,bh=st.baseH*st.scale/100/2+st.border;
+  return Math.abs(lx)<=bw&&Math.abs(ly)<=bh;
+}
+
+function render(){
   const w=canvas.width,h=canvas.height;
   syncPos(w,h);
   scheduleSave();
@@ -914,14 +1312,17 @@ function draw(){
     const s=fit*scale;
 
     const fixedFrame=$("limitMove").checked;
-    ctx.save();
-    if(fixedFrame){ framePath(ctx,w/2-innerW/2,h/2-innerH/2,innerW,innerH,shape); ctx.clip(); }
-    ctx.translate(w/2+offsetX,h/2+offsetY);
-    ctx.rotate(rotation*Math.PI/180);
-    ctx.filter=`brightness(${brightness}) ${filterStr(w,h)}`;
-    if(!fixedFrame){ framePath(ctx,-innerW/2,-innerH/2,innerW,innerH,shape); ctx.clip(); }
     const s2=s*(1+3*blurPx(w,h)/Math.max(1,Math.min(iw*s,ih*s)));
-    ctx.drawImage(img,-iw*s2/2,-ih*s2/2,iw*s2,ih*s2);
+    // 모서리 모양은 액자 창이 아니라 "실제로 보이는 이미지 영역"(이미지 ∩ 액자 창)의 모서리에 적용
+    const V=visiblePoly({w,h,margin,innerW,innerH,ox:offsetX,oy:offsetY,rot:rotation*Math.PI/180,dw:iw*s2,dh:ih*s2,fixed:fixedFrame},0);
+    ctx.save();
+    if(V.length>=3){
+      polyPath(ctx,V,shape); ctx.clip();
+      ctx.translate(w/2+offsetX,h/2+offsetY);
+      ctx.rotate(rotation*Math.PI/180);
+      ctx.filter=`brightness(${brightness}) ${filterStr(w,h)}`;
+      ctx.drawImage(img,-iw*s2/2,-ih*s2/2,iw*s2,ih*s2);
+    }
     ctx.restore();
     ctx.filter="none";
 
@@ -930,6 +1331,9 @@ function draw(){
       const lineMode=fixedFrame ? ($("frameWrap").checked?"wrap":"fixed") : ($("frameFollow").checked?"follow":"fixed");
       drawFrameLines({w,h,margin,innerW,innerH,shape,style,mode:lineMode,ox:offsetX,oy:offsetY,rot:rotation*Math.PI/180,dw:iw*s2,dh:ih*s2});
     }
+
+    // 스티커는 이미지 액자 외곽선보다 위에 올라오고, 우표 바깥 천공에는 아래에서 잘립니다.
+    for(const st of stickers) drawSticker(st,w,h);
   }
 
   if(style!=="round" && style!=="none"){
@@ -938,15 +1342,19 @@ function draw(){
     if(style==="classic"||style==="clean") drawPerforatedRect(0,0,w,h,border,step,5.2*pk);
     else drawEdgeStyle(style,w,h,pk);
   } else if(style==="round"){
+    const sides=getBorderSides();
     ctx.save();
     const R=Math.min(+$("edgeCut").value,w/2,h/2), lw=EDGE_LW, rc=Math.max(0,R-lw/2);
-    ctx.strokeStyle=border;ctx.lineWidth=lw;
-    ctx.beginPath();ctx.roundRect(lw/2,lw/2,w-lw,h-lw,rc);
-    ctx.stroke();ctx.restore();
+    ctx.strokeStyle=border;ctx.lineWidth=lw;ctx.lineCap="round";
+    if(sides.top){ctx.beginPath();ctx.moveTo(lw/2+rc,lw/2);ctx.lineTo(w-lw/2-rc,lw/2);ctx.stroke();}
+    if(sides.right){ctx.beginPath();ctx.moveTo(w-lw/2,lw/2+rc);ctx.lineTo(w-lw/2,h-lw/2-rc);ctx.stroke();}
+    if(sides.bottom){ctx.beginPath();ctx.moveTo(w-lw/2-rc,h-lw/2);ctx.lineTo(lw/2+rc,h-lw/2);ctx.stroke();}
+    if(sides.left){ctx.beginPath();ctx.moveTo(lw/2,h-lw/2-rc);ctx.lineTo(lw/2,lw/2+rc);ctx.stroke();}
+    ctx.restore();
   }
 
   captions[capCur]=readCap();
-  for(const c of captions) drawCaption(c,w,h);
+  for(let i=captions.length-1;i>=0;i--) drawCaption(captions[i],w,h); // 1번이 가장 위에 오도록 뒤 번호부터 그림
 
   paperNoise(texture,w,h);
 
@@ -966,6 +1374,17 @@ function draw(){
   }
 }
 
+// 연속 입력(슬라이더/드래그)에서는 한 프레임에 한 번만 다시 그립니다.
+let drawQueued=false;
+function draw(){
+  if(drawQueued) return;
+  drawQueued=true;
+  requestAnimationFrame(()=>{
+    drawQueued=false;
+    render();
+  });
+}
+
 $("margin").oninput=e=>{setText("marginVal",`${e.target.value} px`);draw()};
 $("perf").oninput=e=>{setText("perfVal",`${e.target.value}%`);draw()};
 $("scale").oninput=e=>{scale=+e.target.value/100;setText("scaleVal",`${e.target.value}%`);draw()};
@@ -974,6 +1393,7 @@ $("brightness").oninput=e=>{brightness=+e.target.value/100;setText("brightnessVa
 $("captionX").oninput=e=>{setText("captionXVal",`${e.target.value}%`);draw()};
 $("captionY").oninput=e=>{setText("captionYVal",`${e.target.value}%`);draw()};
 $("captionOutline").oninput=e=>{setText("captionOutlineVal",`${e.target.value} px`);draw()};
+["caption","captionFont","captionColor","fontSize","capBold","capItalic","capSpacing","capScaleX","capScaleY","captionX","captionY","captionOutline","captionOutlineColor","capRot","capAlpha","capBlend"].forEach(id=>$(id).addEventListener("change",()=>{capCommit();draw()}));
 // ---- 폰트 불러오기: 글꼴 목록 맨 아래 "＋ 폰트 불러오기…" 선택 → 파일(ttf/otf/woff/woff2) 선택 → 목록에 추가되고 바로 적용 ----
 let userFontN=0, prevFont=$("captionFont").value;
 $("captionFont").addEventListener("change",e=>{
@@ -1028,7 +1448,7 @@ $("capScaleX").oninput=e=>{setText("capScaleXVal",`${e.target.value}%`);draw()};
 $("capScaleY").oninput=e=>{setText("capScaleYVal",`${e.target.value}%`);draw()};
 $("fontSize").oninput=e=>{setText("fontVal",`${e.target.value} px`);draw()};
 $("texture").oninput=e=>{setText("textureVal",`${e.target.value}%`);draw()};
-["borderStyle","borderColor","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor","limitMove","filterType","cornerStyle","cnTL","cnTR","cnBL","cnBR","capBold","capItalic","frameWrap","frameFollow","capBlend"].forEach(id=>$(id).addEventListener("input",draw));
+["borderStyle","borderColor","borderTop","borderBottom","borderLeft","borderRight","paperColor","caption","frame","gradMode","paperColor2","textureStyle","texFit","texBlend","captionFont","captionColor","captionOutlineColor","limitMove","filterType","cornerStyle","cnTL","cnTR","cnBL","cnBR","capBold","capItalic","frameWrap","frameFollow","capBlend"].forEach(id=>$(id).addEventListener("input",draw));
 
 function setTheme(m){
   document.documentElement.dataset.theme=m;
@@ -1054,7 +1474,7 @@ const TEX_HINT='강도는 위의 "종이 질감" 슬라이더로 조절해요';
 function setTexture(blob,name){
   return new Promise(res=>{
     const im=new Image();
-    im.onload=()=>{texImg=im;$("texName").textContent=`${name} · ${im.naturalWidth} × ${im.naturalHeight}px`;draw();res(true)};
+    im.onload=()=>{texImg=im;clearTextureCache();$("texName").textContent=`${name} · ${im.naturalWidth} × ${im.naturalHeight}px`;draw();res(true)};
     im.onerror=()=>res(false);
     im.src=URL.createObjectURL(blob);
   });
@@ -1098,14 +1518,16 @@ $("centerBtn").onclick=()=>{offsetX=0;offsetY=0;draw();commit()};
 
 $("resetBtn").onclick=()=>{
   img=null;offsetX=offsetY=0;scale=1;rotation=0;brightness=1;
-  $("file").value="";$("fileName").textContent="";captions=[{...readCap(),text:""}];capCur=0;writeCap(captions[0]);renderTabs();
+  $("file").value="";$("fileName").textContent="";captions=[{...capDefault()}];capCur=0;capHist=[[]];capCommitted=[{...captions[0]}];writeCap(captions[0]);renderTabs();stickers=[];stickerCur=-1;stickerHist=[];stickerCommitted=[];renderStickerTabs();
   canvas.width=800;canvas.height=533;syncOut();hist=[];committed=adjKeys();updateUndo();
   $("scale").value=100;$("rotation").value=0;$("brightness").value=100;
+  clearTextureCache();
   draw();
 };
 
 $("saveBtn").onclick=()=>{
   const W=Math.round(+$("outW").value), H=Math.round(+$("outH").value);
+  render();
   let src=canvas;
   if(W>0&&H>0&&(W!==canvas.width||H!==canvas.height)){
     src=document.createElement("canvas"); src.width=W; src.height=H;
@@ -1113,6 +1535,7 @@ $("saveBtn").onclick=()=>{
     c.drawImage(canvas,0,0,W,H);
   }
   const a=document.createElement("a");
+  if(src===canvas) render();
   a.download="stamp.png";
   a.href=src.toDataURL("image/png");
   a.click();
@@ -1125,35 +1548,42 @@ window.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();$("saveBtn").click()}
 });
 
-let drag=null;
+let drag=null,stickerDrag=null;
 canvas.addEventListener("pointerdown",e=>{
-  if(!img)return;
   const r=canvas.getBoundingClientRect();
-  const x=(e.clientX-r.left)*canvas.width/r.width;
-  const y=(e.clientY-r.top)*canvas.height/r.height;
-  drag={x,y,ox:offsetX,oy:offsetY};
-  canvas.setPointerCapture(e.pointerId);
+  const x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
+  // 선택된 스티커가 있다면 그 위에서 바로 드래그할 수 있고, 겹쳐 있다면 위쪽 스티커부터 잡습니다.
+  for(let i=stickers.length-1;i>=0;i--){
+    if(stickerHit(stickers[i],x,y,canvas.width,canvas.height)){
+      if(stickerCur!==i)selectSticker(i);
+      stickerDrag={x,y,sx:stickers[i].x,sy:stickers[i].y};
+      canvas.setPointerCapture(e.pointerId); return;
+    }
+  }
+  if(!img)return;
+  drag={x,y,ox:offsetX,oy:offsetY}; canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener("pointermove",e=>{
-  if(!drag)return;
   const r=canvas.getBoundingClientRect();
-  const x=(e.clientX-r.left)*canvas.width/r.width;
-  const y=(e.clientY-r.top)*canvas.height/r.height;
-  offsetX=drag.ox+(x-drag.x);offsetY=drag.oy+(y-drag.y);draw();
+  const x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
+  if(stickerDrag&&stickerCur>=0){
+    const st=stickers[stickerCur];
+    st.x=stickerDrag.sx+(x-stickerDrag.x)/canvas.width*100;
+    st.y=stickerDrag.sy+(y-stickerDrag.y)/canvas.height*100;
+    const px=Math.round(st.x*10)/10, py=Math.round(st.y*10)/10;
+    $("stickerX").value=px; $("stickerY").value=py;
+    setText("stickerXVal",`${px}%`); setText("stickerYVal",`${py}%`);
+    draw(); return;
+  }
+  if(!drag)return; offsetX=drag.ox+(x-drag.x);offsetY=drag.oy+(y-drag.y);draw();
 });
-canvas.addEventListener("pointerup",()=>{drag=null;commit()});
-canvas.addEventListener("pointercancel",()=>{drag=null;commit()});
+canvas.addEventListener("pointerup",()=>{if(stickerDrag){stickerDrag=null;stickerCommit()}if(drag){drag=null;commit()}});
+canvas.addEventListener("pointercancel",()=>{if(stickerDrag){stickerDrag=null;stickerCommit()}if(drag){drag=null;commit()}});
 
-// ---- 사용 안내: 버튼으로 열기 / 브라우저를 처음 열 때 한 번만 자동 표시 ----
-const GUIDE_KEY="stampAtelier.guideSeen.v1";
-function openGuide(){ $("guide").classList.add("open"); $("guideClose").focus(); }
-function closeGuide(){ $("guide").classList.remove("open"); }
-$("guideBtn").onclick=openGuide;
-$("guideClose").onclick=closeGuide;
-$("guide").addEventListener("pointerdown",e=>{ if(e.target===$("guide")) closeGuide(); });
-window.addEventListener("keydown",e=>{ if(e.key==="Escape") closeGuide(); });
+// 새 안내 투어는 처음 사용할 때 한 번 자동으로 보여 줍니다. 이후에는 상단 "사용 안내" 버튼으로 다시 열 수 있습니다.
+const GUIDE_KEY="stampAtelier.guideSeen.v2";
 window.addEventListener("load",()=>{
-  try{ if(!localStorage.getItem(GUIDE_KEY)){ localStorage.setItem(GUIDE_KEY,"1"); openGuide(); } }catch(e){}
+  try{ if(!localStorage.getItem(GUIDE_KEY)){ localStorage.setItem(GUIDE_KEY,"1"); guideOpen(); } }catch(e){}
 });
 
 // ---- 설정 저장(localStorage) / 설정 초기화 ----
@@ -1199,6 +1629,7 @@ function applySettings(o){
   if(Array.isArray(caps) && caps.length){
     const clean=c=>Object.fromEntries(Object.entries(c||{}).filter(([k,v])=>v!==undefined&&v!==null&&!(typeof v==="number"&&isNaN(v))));
     captions=caps.slice(0,CAP_MAX).map(c=>({...capDefault(),...clean(c)}));
+    capHist=captions.map(()=>[]); capCommitted=captions.map(c=>({...c}));
     capCur=Math.min(Math.max(+o.capCur||0,0),captions.length-1);
     writeCap(captions[capCur]); renderTabs();
   }
@@ -1267,6 +1698,7 @@ window.addEventListener("load",async()=>{
   draw();
 });
 
+enhanceValueBoxes();
 renderTabs();
 renderGradChips();
 syncFrameOpts();
